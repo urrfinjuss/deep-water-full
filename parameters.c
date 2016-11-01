@@ -100,9 +100,9 @@ void load_data() {
    
 		for (int j = 0; j < input->N; j++) {
      		     q = PI*(2.L*j/input->N - 1.0L);
-		     u = input->u + 2.L*atan2l(input->L*sinl(0.5L*(q-extra->q)), cosl(0.5L*(q-extra->q)));
+		     	 u = input->u + 2.L*atan2l(input->L*sinl(0.5L*(q-extra->q)), cosl(0.5L*(q-extra->q)));
      		     array->Q[j] = 1.L; //1E-13*cexpl(-1.IL*u);
-     		     array->V[j] = -0.05IL*(1.L/ctanl(0.5L*(u-0.12IL)) - 1.IL) + 0.00IL*(1.L/ctanl(0.5L*(u-0.24IL)) - 1.IL); // run 8&9&10&11
+     		     array->V[j] = -0.025IL*(1.L/ctanl(0.5L*(u-0.12IL)) - 1.IL) + 0.00IL*(1.L/ctanl(0.5L*(u-0.24IL)) - 1.IL); // run 8&9&10&11
    		}
 		break;
   }

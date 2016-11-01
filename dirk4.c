@@ -23,11 +23,11 @@ void init_dirk4_module(params_ptr ginput, aux_ptr gextra, data_ptr garray, consq
   array = garray; 
   motion = gmotion; 
   if (input->s) {
-    dirk4.nskip = 64;
+    dirk4.nskip = 256;
     dirk4.dt = fminl(0.25L*PI*powl(input->L/input->N,1), 0.125L*powl(input->L/input->N, 1.5L))/sqrtl(input->s);
   } else {
-    dirk4.nskip = 64; 
-    dirk4.dt = 2.0L*sqrtl(input->L/0.03125)*sqrtl(1024.Q/input->N)*PI*powl(input->L/input->N,1);      // overturning Pavel (no st)
+    dirk4.nskip = 256; 
+    dirk4.dt = 1.2L*sqrtl(input->L/0.03125)*sqrtl(1024.Q/input->N)*PI*powl(input->L/input->N,1);      // overturning Pavel (no st)
   }
   dirk4.D = 0.25L*powl(92.L*input->N/256.L,-12)*dirk4.dt;  // adjusted to 0.25L from 1.0L
   dirk4.D = 1.00L*powl(104.L*input->N/256.L,-12)*dirk4.dt;  // adjusted to 0.25L from 1.0L
@@ -50,7 +50,7 @@ long double init_dirk4() {
    if ( input->s > 0.0L) {
      dirk4.dt = fminl(0.25L*PI*powl(input->L/input->N,1), 0.125L*powl(input->L/input->N, 1.5L))/sqrtl(input->s);
    } else {
-     dirk4.dt = 2.0L*sqrtl(input->L/0.03125)*sqrtl(1024.Q/input->N)*PI*powl(input->L/input->N,1);      // overturning Pavel (no st) modified sqrt(L/L0)
+     dirk4.dt = 1.2L*sqrtl(input->L/0.03125)*sqrtl(1024.Q/input->N)*PI*powl(input->L/input->N,1);      // overturning Pavel (no st) modified sqrt(L/L0)
    }
    dirk4.tshift += dirk4.time;
    dirk4.time = 0.L;

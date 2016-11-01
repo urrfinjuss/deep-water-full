@@ -11,6 +11,7 @@ static fftwl_plan p0f, p1f, p2f;
 static fftwl_plan p0b, p1b;
 static long double *k, u;
 static long int ref_nog;
+static long double ml_tolerance;
 
 static long double diss_fltr;
 
@@ -21,6 +22,7 @@ void init_lowlevel() {
 }
 
 void init_timemarching() {
+  ml_tolerance = 1.0E-16L;
 #if RK4  
   init_exrk4_module(&input, &extra, &array, &motion);
   diss_fltr = init_rk4();
@@ -352,15 +354,33 @@ void restore_arrays() {
 }
 
 
+void call_L2_refine() {
+	char fname[80];
+	move_mesh(track_singularity(), input.L, 2*input.N);
+    //fftwl_complex mon = check_resolution();
+	     
+	sprintf(fname, "spec_l2r%ld.txt", input.refN+1);
+  	get_spectrum(fname);
+    sprintf(fname, "L2: Using Gravity CFL: dt = %.12LE\n", motion.time);
+    debug_msg(fname, EXIT_FALSE);
+#if RK4
+    modify_rk4skip(sqrtl(1.5L));
+#elif DIRK4
+    modify_dirk4skip(sqrtl(1.5L));
+#endif
+}
+
 void resolution_monitor(long int *iter) {  
   // this actually works quite well
   char fname[512];
   fftwl_complex mon = check_resolution();
-
-  if (( creall(mon)>1e-12*sqrt(input.N))||(cimagl(mon)>1e-12*sqrt(input.N))) {
+  
+  if (  (creall(mon)>1e-12*sqrt(input.N))||(cimagl(mon)>1e-12*sqrt(input.N)) ) {
      sprintf(fname, "spec_br%ld.txt", input.refN+1);
      //spec_output(fname, tmp0, motion.time);
      get_spectrum(fname);
+     get_integrals();
+     if (fabs(motion.ml) > ml_tolerance) printf("Mean Level too inaccurate.\n");
 
      printf("Refinement: L0");
 
@@ -378,94 +398,89 @@ void resolution_monitor(long int *iter) {
 	     backup_arrays();
 	     long double posS = track_singularity();
 	     if (input.g) {
-	       move_mesh(posS, input.L*sqrtl(2.0L), input.N);  // Lin = L/2 in Matlab
-     	       mon = check_resolution();
-	       printf(" coarsen");
-	       sprintf(fname, "L1 with g: revert. ref #%ld\n", ref_nog);
-	       debug_msg(fname, EXIT_FALSE);
-	       if (( creall(mon)>2e-13*sqrt(input.N))||(cimagl(mon)>2e-13*sqrt(input.N))) {
- 	         printf(" failed");
-	         sprintf(fname,"L1 with g: revert failed. ref #%ld\n", ref_nog);
-		 debug_msg(fname, EXIT_FALSE);
-      	         move_mesh(posS, input.L/sqrtl(2.0L), input.N);     
-		 restore_arrays();	 	 
-   	         move_mesh(posS, input.L/sqrtl(2.0L), input.N);  // Lin = L/2 in Matlab
-     	         mon = check_resolution();
+	     	move_mesh(posS, input.L*sqrtl(2.0L), input.N);  // Lin = L/2 in Matlab
+     	    mon = check_resolution();
+	       	printf(" coarsen");
+	       	sprintf(fname, "L1 with g: revert. ref #%ld\n", ref_nog);
+	       	debug_msg(fname, EXIT_FALSE);
+	       	if (( creall(mon)>2e-13*sqrt(input.N))||(cimagl(mon)>2e-13*sqrt(input.N))) {
+ 	        	printf(" failed");
+	         	sprintf(fname,"L1 with g: revert failed. ref #%ld\n", ref_nog);
+		 		debug_msg(fname, EXIT_FALSE);
+      	        move_mesh(posS, input.L/sqrtl(2.0L), input.N);     
+		 		restore_arrays();	 	 
+   	         	move_mesh(posS, input.L/sqrtl(2.0L), input.N);  // Lin = L/2 in Matlab
+     	        mon = check_resolution();
 #if RK4
-		 modify_rk4skip(sqrtl(1.5L));
+		 		modify_rk4skip(sqrtl(1.5L));
 #elif DIRK4
-		 modify_dirk4skip(sqrtl(1.5L));
+		 		modify_dirk4skip(sqrtl(1.5L));
 #endif
  	       } else {
 #if RK4
-		 modify_rk4skip(1.L/sqrtl(1.5L));
+		 		modify_rk4skip(1.L/sqrtl(1.5L));
 #elif DIRK4
-		 modify_dirk4skip(1.L/sqrtl(1.5L));
+		 		modify_dirk4skip(1.L/sqrtl(1.5L));
 #endif
- 	         printf(" success\n.");
-		 sprintf(fname, "L1 with g: revert success!. ref #%ld\n", ref_nog);
-  	         debug_msg(fname, EXIT_FALSE);
+		 		if (fabs(motion.ml) > ml_tolerance) printf("Refine NOW!\n");
+ 	         	printf(" success\n.");
+		 		sprintf(fname, "L1 with g: revert success!. ref #%ld\n", ref_nog);
+  	         	debug_msg(fname, EXIT_FALSE);
 	       }
-             } else {
+		} else {
  	       printf(" refine");
 	       sprintf(fname, "L1 with g: forward ref #%ld\n", ref_nog);
 	       debug_msg(fname, EXIT_FALSE);
 	       move_mesh(posS, input.L/sqrtl(2.0L), input.N);  // Lin = L/2 in Matlab
-     	       mon = check_resolution();
+     	   mon = check_resolution();
 #if RK4
 	       modify_rk4skip(sqrtl(1.5L));
 #elif DIRK4
 	       modify_dirk4skip(sqrtl(1.5L));
 #endif
-	       //rk4.nskip = floor(rk4.nskip*sqrtl(2.L));
- 	     }
-	     sprintf(fname, "spec_l1r%ld.txt", input.refN+1);
-	     get_spectrum(fname);
-	     ref_nog++;	
-	     sprintf(fname, "L1: Using Gravity CFL: dt = %.12LE\n", motion.time);
-             debug_msg(fname, EXIT_FALSE);
-	if (( creall(mon)>2e-13*sqrt(input.N))||(cimagl(mon)>2e-13*sqrt(input.N))) {
-	     sprintf(fname, "L1, ref #%ld failed.\n", ref_nog-1);
-             debug_msg(fname, EXIT_FALSE);
- 	     printf(" failed. L2: success.\n");
-   	     move_mesh(posS, input.L*sqrtl(2.0L), input.N);
-   	     restore_arrays();	
-	     move_mesh(track_singularity(), input.L, 2*input.N);
-     	     mon = check_resolution();
-	     sprintf(fname, "spec_l2r%ld.txt", input.refN+1);
-  	     get_spectrum(fname);
-	     //spec_output(fname, tmp0, motion.time);
-             sprintf(fname, "L2: Using Gravity CFL: dt = %.12LE\n", motion.time);
-             debug_msg(fname, EXIT_FALSE);
+ 	   	}
+	   	sprintf(fname, "spec_l1r%ld.txt", input.refN+1);
+	   	get_spectrum(fname);
+        get_integrals();
+	   	ref_nog++;	
+	   	sprintf(fname, "L1: Using Gravity CFL: dt = %.12LE\n", motion.time);
+       	debug_msg(fname, EXIT_FALSE);
+		if ((( creall(mon)>2e-13*sqrt(input.N))||(cimagl(mon)>2e-13*sqrt(input.N)))||(fabs(motion.ml) > ml_tolerance)   ) {
+	    	sprintf(fname, "L1, ref #%ld failed.\n", ref_nog-1);
+         	debug_msg(fname, EXIT_FALSE);
+ 	     	printf(" failed. L2: success.\n");
+   	     	move_mesh(posS, input.L*sqrtl(2.0L), input.N);
+   	     	restore_arrays();	
+   	     	call_L2_refine();
+	     	/*
+	     	move_mesh(track_singularity(), input.L, 2*input.N);
+     	    mon = check_resolution();
+	     	sprintf(fname, "spec_l2r%ld.txt", input.refN+1);
+  	     	get_spectrum(fname);
+            sprintf(fname, "L2: Using Gravity CFL: dt = %.12LE\n", motion.time);
+            debug_msg(fname, EXIT_FALSE);
 #if RK4
-  	     modify_rk4skip(sqrtl(1.5L));
+  	     	modify_rk4skip(sqrtl(1.5L));
 #elif DIRK4
-	     modify_dirk4skip(sqrtl(1.5L));
+	     	modify_dirk4skip(sqrtl(1.5L));
 #endif
-	     // experimental (dt slow down)
-	     //rk4.dt = rk4.dt/8.L;	 
-	     //rk4.nskip = floor(rk4.nskip*sqrtl(2.L));  // Pavel no st
-	     ref_nog = 0;
-        } else {
- 	     printf(" success.\n");
-	     sprintf(fname, "L1 with g: success!. ref #%ld\n", ref_nog-1);
-             debug_msg(fname, EXIT_FALSE);
-	}
+			*/
+	     	ref_nog = 0;
+       	} else {
+ 	     	printf(" success.\n");
+	     	sprintf(fname, "L1 with g: success!. ref #%ld\n", ref_nog-1);
+            debug_msg(fname, EXIT_FALSE);
+		}
         if (( creall(mon)>1e-12*sqrt(input.N))||(cimagl(mon)>1e-12*sqrt(input.N))) {
- 	   printf("\nSpectrum too wide after refinement! Something went wrong\n");
-	   sprintf(fname, "Spectrum too wide. CFL?\n"); 
-	   debug_msg(fname, EXIT_FALSE);
-           sprintf(fname, "spec_last.txt");
-           //spec_output(fname, tmp0, motion.time);
-	   exit(1);
+ 	   		printf("\nSpectrum too wide after refinement! Something went wrong\n");
+	   		sprintf(fname, "Spectrum too wide. CFL?\n"); 
+	   		debug_msg(fname, EXIT_FALSE);
+           	sprintf(fname, "spec_last.txt");
+	   		exit(1);
         }
- 	//printf(" Success.\n"); 	 	     
-        //sprintf(fname, "more.txt");
-        //get_integrals();
-
         sprintf(fname, "After Ref: ML = %.12LE\ty0 = %.12LE\n", motion.ml, motion.y0);
         debug_msg(fname, EXIT_FALSE);
-	input.refN++;
+		input.refN++;
      } else printf(" success\n");
   }
 }

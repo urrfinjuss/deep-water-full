@@ -10,10 +10,10 @@
 #define EXIT_TRUE 1
 #define EXIT_FALSE 0
 #define SPEC_OUTPUT 1   // whether to generate all the spectrum files
-#define MOVE_MESH 0	// 0 if singularity tracking is off , 1 otherwise
+#define MOVE_MESH 1	// 0 if singularity tracking is off , 1 otherwise
 #define PI acosl(-1.0)
-#define RK4 0
-#define DIRK4 1
+#define RK4 1
+#define DIRK4 0
 
 typedef struct work {
   fftwl_complex *Q;

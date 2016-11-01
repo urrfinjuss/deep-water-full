@@ -12,9 +12,9 @@ void init_exrk4_module(params_ptr ginput, aux_ptr gextra, data_ptr garray, consq
   array = garray; 
   motion = gmotion; 
   if (input->s) {
-    rk4.nskip = 8000;
+    rk4.nskip = 1024;
   } else {
-    rk4.nskip = 8000; 
+    rk4.nskip = 1024; 
   }
   printf("%ld\n", rk4.nskip);
 }
