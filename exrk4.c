@@ -63,32 +63,32 @@ void rk4_step() {
 
   compute_aux_arrays(rk4.tmpq, rk4.tmpv);
   for (long int j = 0; j < input->N; j++) {
-    rk4.k0q[j] = 0.5IL*(2.0L*extra->dQ[j]*extra->U[j] - extra->dU[j]*rk4.tmpq[j])/extra->dq[j];
-    rk4.k0v[j] = 1.0IL*(extra->U[j]*extra->dV[j] - rk4.tmpq[j]*rk4.tmpq[j]*extra->B[j])/extra->dq[j] + input->g*(rk4.tmpq[j]*rk4.tmpq[j] - 1.0L);
+    rk4.k0q[j] = 0.5IL*(2.0L*extra->dQ[j]*extra->U[j] - extra->dU[j]*rk4.tmpq[j])*extra->newdQ[j];
+    rk4.k0v[j] = 1.0IL*(extra->U[j]*extra->dV[j] - rk4.tmpq[j]*rk4.tmpq[j]*extra->B[j])*extra->newdQ[j] + input->g*(rk4.tmpq[j]*rk4.tmpq[j] - 1.0L);
     rk4.tmpq[j] = array->Q[j] + 0.5L*rk4.dt*rk4.k0q[j];
     rk4.tmpv[j] = array->V[j] + 0.5L*rk4.dt*rk4.k0v[j];
   }
 
   compute_aux_arrays(rk4.tmpq, rk4.tmpv);
   for (long int j = 0; j < input->N; j++) {
-    rk4.k1q[j] = 0.5IL*(2.0L*extra->dQ[j]*extra->U[j] - extra->dU[j]*rk4.tmpq[j])/extra->dq[j];
-    rk4.k1v[j] = 1.0IL*(extra->U[j]*extra->dV[j] - rk4.tmpq[j]*rk4.tmpq[j]*extra->B[j])/extra->dq[j] + input->g*(rk4.tmpq[j]*rk4.tmpq[j] - 1.0L);
+    rk4.k1q[j] = 0.5IL*(2.0L*extra->dQ[j]*extra->U[j] - extra->dU[j]*rk4.tmpq[j])*extra->newdQ[j];
+    rk4.k1v[j] = 1.0IL*(extra->U[j]*extra->dV[j] - rk4.tmpq[j]*rk4.tmpq[j]*extra->B[j])*extra->newdQ[j] + input->g*(rk4.tmpq[j]*rk4.tmpq[j] - 1.0L);
     rk4.tmpq[j] = array->Q[j] + 0.5L*rk4.dt*rk4.k1q[j];
     rk4.tmpv[j] = array->V[j] + 0.5L*rk4.dt*rk4.k1v[j];
   }
 
   compute_aux_arrays(rk4.tmpq, rk4.tmpv);
   for (long int j = 0; j < input->N; j++) {
-    rk4.k2q[j] = 0.5IL*(2.0L*extra->dQ[j]*extra->U[j] - extra->dU[j]*rk4.tmpq[j])/extra->dq[j];
-    rk4.k2v[j] = 1.0IL*(extra->U[j]*extra->dV[j] - rk4.tmpq[j]*rk4.tmpq[j]*extra->B[j])/extra->dq[j] + input->g*(rk4.tmpq[j]*rk4.tmpq[j] - 1.0L);
+    rk4.k2q[j] = 0.5IL*(2.0L*extra->dQ[j]*extra->U[j] - extra->dU[j]*rk4.tmpq[j])*extra->newdQ[j];
+    rk4.k2v[j] = 1.0IL*(extra->U[j]*extra->dV[j] - rk4.tmpq[j]*rk4.tmpq[j]*extra->B[j])*extra->newdQ[j] + input->g*(rk4.tmpq[j]*rk4.tmpq[j] - 1.0L);
     rk4.tmpq[j] = array->Q[j] + 1.0L*rk4.dt*rk4.k2q[j];
     rk4.tmpv[j] = array->V[j] + 1.0L*rk4.dt*rk4.k2v[j];
   }
 
   compute_aux_arrays(rk4.tmpq, rk4.tmpv);
   for (long int j = 0; j < input->N; j++) {
-    rk4.k3q[j] = 0.5IL*(2.0L*extra->dQ[j]*extra->U[j] - extra->dU[j]*rk4.tmpq[j])/extra->dq[j];
-    rk4.k3v[j] = 1.0IL*(extra->U[j]*extra->dV[j] - rk4.tmpq[j]*rk4.tmpq[j]*extra->B[j])/extra->dq[j] + input->g*(rk4.tmpq[j]*rk4.tmpq[j] - 1.0L);
+    rk4.k3q[j] = 0.5IL*(2.0L*extra->dQ[j]*extra->U[j] - extra->dU[j]*rk4.tmpq[j])*extra->newdQ[j];
+    rk4.k3v[j] = 1.0IL*(extra->U[j]*extra->dV[j] - rk4.tmpq[j]*rk4.tmpq[j]*extra->B[j])*extra->newdQ[j] + input->g*(rk4.tmpq[j]*rk4.tmpq[j] - 1.0L);
     array->Q[j] += 1.0L*rk4.dt*(rk4.k0q[j] + 2.0L*rk4.k1q[j] + 2.0L*rk4.k2q[j] + rk4.k3q[j])/6.0L;
     array->V[j] += 1.0L*rk4.dt*(rk4.k0v[j] + 2.0L*rk4.k1v[j] + 2.0L*rk4.k2v[j] + rk4.k3v[j])/6.0L;
   }

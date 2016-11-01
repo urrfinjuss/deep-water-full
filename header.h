@@ -31,7 +31,7 @@ typedef struct more_arrays {
   fftwl_complex *B;
   fftwl_complex *w;
   fftwl_complex b0;
-  long double q, *dq;
+  long double q, *newdQ, *newdU; //*dq;
 } aux, *aux_ptr;
 
 typedef struct rk4_arrays {

@@ -31,8 +31,9 @@ void init_dirk4_module(params_ptr ginput, aux_ptr gextra, data_ptr garray, consq
   }
   dirk4.D = 0.25L*powl(92.L*input->N/256.L,-12)*dirk4.dt;  // adjusted to 0.25L from 1.0L
   dirk4.D = 1.00L*powl(104.L*input->N/256.L,-12)*dirk4.dt;  // adjusted to 0.25L from 1.0L
+  dirk4.D = 0.0;
   dirk4.tshift = 0.L;
-  dirk4.fp_tolerance = 1.0E-14L;
+  dirk4.fp_tolerance = 2.0E-15L;
   printf("%ld\n", dirk4.nskip);
 }
 
@@ -57,6 +58,7 @@ long double init_dirk4() {
 
    dirk4.D = 0.25L*powl(92.L*input->N/256.L,-12)*dirk4.dt;  // adjusted to 0.25L from 1.0L /input->L
    dirk4.D = 1.00L*powl(104.L*input->N/256.L,-12)*dirk4.dt;  // adjusted to 0.25L from 1.0L /input->L
+   dirk4.D = 0.0;
    dirk4.max_iter = 25;   
 
    if (!(dirk4.tmpq1 = fftwl_malloc(input->N*sizeof(fftwl_complex)))) debug_msg("Reinitialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);
@@ -84,8 +86,8 @@ void dirk4_step() {
   compute_aux_arrays(array->Q, array->V);
 
   for (long int j = 0; j < input->N; j++) {
-    dirk4.k1q[j] = 0.5IL*(2.0L*extra->dQ[j]*extra->U[j] - extra->dU[j]*array->Q[j])/extra->dq[j];
-    dirk4.k1v[j] = 1.0IL*(extra->U[j]*extra->dV[j] - array->Q[j]*array->Q[j]*extra->B[j])/extra->dq[j] + input->g*(array->Q[j]*array->Q[j] - 1.0L);
+    dirk4.k1q[j] = 0.5IL*(2.0L*extra->dQ[j]*extra->U[j] - extra->dU[j]*array->Q[j])*extra->newdQ[j];
+    dirk4.k1v[j] = 1.0IL*(extra->U[j]*extra->dV[j] - array->Q[j]*array->Q[j]*extra->B[j])*extra->newdQ[j] + input->g*(array->Q[j]*array->Q[j] - 1.0L);
   }
   memcpy(dirk4.k2q, dirk4.k1q, input->N*sizeof(fftwl_complex));
   memcpy(dirk4.k2v, dirk4.k1v, input->N*sizeof(fftwl_complex));
@@ -110,13 +112,13 @@ void dirk4_step() {
     }
     compute_aux_arrays(dirk4.tmpq1, dirk4.tmpv1);
     for (long int j = 0; j < input->N; j++) {
-      dirk4.k1q[j] = 0.5IL*(2.0L*extra->dQ[j]*extra->U[j] - extra->dU[j]*dirk4.tmpq1[j])/extra->dq[j];
-      dirk4.k1v[j] = 1.0IL*(extra->U[j]*extra->dV[j] - dirk4.tmpq1[j]*dirk4.tmpq1[j]*extra->B[j])/extra->dq[j] + input->g*(dirk4.tmpq1[j]*dirk4.tmpq1[j] - 1.0L);
+      dirk4.k1q[j] = 0.5IL*(2.0L*extra->dQ[j]*extra->U[j] - extra->dU[j]*dirk4.tmpq1[j])*extra->newdQ[j];
+      dirk4.k1v[j] = 1.0IL*(extra->U[j]*extra->dV[j] - dirk4.tmpq1[j]*dirk4.tmpq1[j]*extra->B[j])*extra->newdQ[j] + input->g*(dirk4.tmpq1[j]*dirk4.tmpq1[j] - 1.0L);
     }
     compute_aux_arrays(dirk4.tmpq2, dirk4.tmpv2);
     for (long int j = 0; j < input->N; j++) {
-      dirk4.k2q[j] = 0.5IL*(2.0L*extra->dQ[j]*extra->U[j] - extra->dU[j]*dirk4.tmpq2[j])/extra->dq[j];
-      dirk4.k2v[j] = 1.0IL*(extra->U[j]*extra->dV[j] - dirk4.tmpq2[j]*dirk4.tmpq2[j]*extra->B[j])/extra->dq[j] + input->g*(dirk4.tmpq2[j]*dirk4.tmpq2[j] - 1.0L);
+      dirk4.k2q[j] = 0.5IL*(2.0L*extra->dQ[j]*extra->U[j] - extra->dU[j]*dirk4.tmpq2[j])*extra->newdQ[j];
+      dirk4.k2v[j] = 1.0IL*(extra->U[j]*extra->dV[j] - dirk4.tmpq2[j]*dirk4.tmpq2[j]*extra->B[j])*extra->newdQ[j] + input->g*(dirk4.tmpq2[j]*dirk4.tmpq2[j] - 1.0L);
     }
     current_iter++;
     /*printf("Current Iteration %ld of %ld\n", current_iter, dirk4.max_iter);

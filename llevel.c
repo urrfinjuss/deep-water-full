@@ -32,36 +32,66 @@ void init_timemarching() {
 #endif
 }
 
-void
-
+void mult_jacobian(fftwl_complex *rhs, fftwl_complex *x) {
+	// multiply by du/dq via tridiagonal operator on the Fourier side
+	// rhs is assumed to be Fourier vector (BACKWARD) of coefficients
+	// metod progonki == Thomas method
+	long double a = 0.5L*(1.0L - powl(input.L,2))/(1.0L + powl(input.L,2));
+	
+	tmp0[0] = 2.L*rhs[0]/(1.L + powl(input.L,2));
+	tmp1[0] = a*cexpl(-1.0IL*extra.q); 
+	
+	for (long int j = 1; j < input.N/2-1; j++) {
+		tmp1[j] = a*cexpl(-1.0IL*extra.q)/(1.L - a*cexpl(1.0IL*extra.q)*tmp1[j-1]);														// tmp1 stores c'
+		tmp0[j] = (2.L*rhs[j]/(1.L + powl(input.L,2)) - a*cexpl(1.0IL*extra.q)*tmp0[j-1])/(1.L - a*cexpl(1.0IL*extra.q)*tmp1[j-1]);		// tmp0 stores d'
+	}
+	
+	x[input.N/2-1] = tmp0[input.N/2-1];
+	for (long int j = input.N/2-2; j > -1; j--) x[j] = tmp0[j] - tmp1[j]*x[j+1];
+}
 
 void inverseZq() {
-	//memcpy(tmp0, in, (input.N)*sizeof(fftwl_complex));
 	for (long int j = 0; j < input.N; j++) {
 		tmp0[j] = array.Q[j]*array.Q[j]/input.N;			///extra.dq[j]				// matrix
-		tmp1[j] = (1.L - array.Q[j]*array.Q[j])/input.N;		// rhs
 	}
+	memset(tmp1, 0, input.N*sizeof(fftwl_complex));
+	tmp1[0] = 1.L;
 	fftwl_execute(p0b);
-	fftwl_execute(p1b);
-	Rz[0] = tmp1[0]/tmp0[0]; 
-	//printf("%.12LE\t%.12LE\n", creall(tmp0[0]), cimagl(tmp0[0])); 
+	z[0] = tmp1[0]/tmp0[0]; 
 	
 	for (long int j = 1; j < input.N/2; j++) {
 		fftwl_complex sum = 0.L;
-		//tmp0[j] = powl(-1,j)*tmp0[j];
-		for (long int l = 0; l < j; l++) {
-			sum += tmp0[j-l]*Rz[l];
+		for (long int l = j-1; l > -1; l--) {
+			sum += tmp0[j-l]*z[l];
 		}
-		Rz[j] = (tmp1[j]-sum/tmp0[0]);
+		z[j] = (tmp1[j]-sum/tmp0[0]);
 	}
-	for (long int j = 0; j < 6; j++) printf("%ld\t%.12LE\n", j, creal(tmp0[j]));
-	for (long int j = 1; j < input.N; j++) Rz[j] = -Rz[j]; 			//	works with L = 1 
-	memset(Rz+input.N/2, 0, (input.N/2)*sizeof(fftwl_complex));
-	
-	//memcpy(tmp1, Rz, (input.N)*sizeof(fftwl_complex));
+	memset(z+input.N/2, 0, (input.N/2)*sizeof(fftwl_complex));
+	memcpy(tmp1, z, (input.N)*sizeof(fftwl_complex));   // tmp1 now stores z_u
+	//primitive_output("z_good.txt", z);
 	fftwl_execute(p1f);
-	//for (long int j = 0; j < input.N; j++) tmp1[j] = tmp1[j]*extra.dq[j];
-	primitive_output("zq_good.txt",tmp1);
+	for (long int j = 0; j < input.N; j++) {
+		tmp1[j] = 1.IL*(tmp1[j] - 1.L)*extra.newdU[j]/input.N; // bad need tridiagonal solver (need to clarify who is analytic of what..), now stores tilde z_q
+	}
+	//fftwl_execute(p1b);
+	
+	
+	
+	//primitive_output("zq_direct.txt", tmp1);
+	//mult_jacobian(z, Rz);	// debugging tridiagonal solver
+	//memcpy(tmp1, Rz, (input.N)*sizeof(fftwl_complex));
+	//fftwl_execute(p1f);
+	//primitive_output("zq_tridiag.txt", Rz);
+	
+	//for (long int j = 0; j < input.N; j++) tmp1[j] = (1.L/cpowl(array.Q[j],2) - 1.L)*extra.dq[j];
+	
+	//primitive_output("zu_good.txt",tmp1);
+	//for (long int j = 0; j < input.N; j++) tmp1[j] = (1.L/cpowl(array.Q[j],2) - 1.L);
+	//primitive_output("zu_bad.txt",tmp1);
+	//fftwl_execute(p1b);
+	//for (long int j = 0; j < input.N; j++) tmp1[j] = tmp1[j]/input.N;
+	//primitive_output("z_bad.txt",tmp1);
+	//exit(1);
 }
 
 
@@ -83,7 +113,7 @@ void compute_aux_arrays(fftwl_complex *inQ, fftwl_complex *inV) {
 
   for (int j = 0; j < input.N; j++) {
     tmp1[j] = 2.L*creall(inV[j]*conjl(inQ[j]*inQ[j]));
-    tmp0[j] = inV[j]*conjl(inV[j]) + 4.L*input.s*cimagl(tmp0[j]*conjl(inQ[j]))/extra.dq[j];  /// sic!
+    tmp0[j] = inV[j]*conjl(inV[j]) + 4.L*input.s*cimagl(tmp0[j]*conjl(inQ[j]))*extra.newdQ[j];  /// sic!
   }
   fftwl_execute(p1b);  
   fftwl_execute(p0b);
@@ -131,18 +161,19 @@ void get_surface(char* fname) {
 
 void get_integrals() {
 
+
+  /*for (long int j = 0; j < input.N; j++) {
+    tmp0[j] = array.V[j]*extra.newdU[j]/cpowl(array.Q[j], 2.0L)/input.N;
+    tmp1[j] = -1.0IL*extra.newdU[j]*(1.0L - cpowl(array.Q[j], -2.0L))/input.N;   // 
+  }*/
+  //primitive_output("zq_bad.txt",tmp0);
   inverseZq();
-  primitive_output("z_good.txt", Rz);
-  for (long int j = 0; j < input.N; j++) {
-    tmp0[j] = array.V[j]*extra.dq[j]/cpowl(array.Q[j], 2.0L)/input.N;
-    tmp1[j] = -1.0IL*extra.dq[j]*(1.0L - cpowl(array.Q[j], -2.0L))/input.N   * (1.IL);   // 
-  }
-  primitive_output("zq_bad.txt",tmp1);
+  for (long int j = 0; j < input.N; j++) tmp0[j] = array.V[j]*extra.newdU[j]/cpowl(array.Q[j], 2.0L)/input.N;
+  //primitive_output("zq_good.txt",tmp0);
+  //exit(1);
   fftwl_execute(p0b);
   fftwl_execute(p1b);  
   
-  primitive_output("z_bad.txt", tmp1);
-  exit(1);
   motion.K = 0.L;
   tmp1[0] = 0.L;
   memset(tmp1+input.N/2,0,sizeof(fftwl_complex)*input.N/2);
@@ -163,13 +194,13 @@ void get_integrals() {
   motion.ml = 0.L;
   motion.y0 = 0.L;
   motion.P = 0.L;
-  for (long int j = 0; j < input.N; j++) motion.y0 += -cimagl(tmp1[j])*(extra.dq[j] + tmp0[j])/input.N;	
+  for (long int j = 0; j < input.N; j++) motion.y0 += -cimagl(tmp1[j])*(extra.newdU[j] + tmp0[j])/input.N;	
   for (long int j = 0; j < input.N; j++) {
      q = 2.L*PI*(1.L*j/input.N - 0.5L);
      u = input.u + 2.L*atan2l(input.L*sinl(0.5L*(q-extra.q)), cosl(0.5L*(q-extra.q)));
      tmp2[j] = u + (tmp1[j]-creall(tmp1[0])) + 1.0IL*motion.y0;
-     motion.ml += (extra.dq[j] + tmp0[j])*cimagl(tmp2[j]);
-     motion.P += input.g*((extra.dq[j] + tmp0[j])*cimagl(tmp2[j])*cimagl(tmp2[j]));
+     motion.ml += (extra.newdU[j] + tmp0[j])*cimagl(tmp2[j]);
+     motion.P += input.g*((extra.newdU[j] + tmp0[j])*cimagl(tmp2[j])*cimagl(tmp2[j]));
   }
   memcpy(z, tmp2, input.N*sizeof(fftwl_complex));
   /*FILE *fh = fopen(fname,"w");
@@ -451,7 +482,9 @@ void set_aux() {
   for (int j = 0; j < (input.N)/2-1; j++) extra.w[j] = cexpl(-1.0IL*k[j+1]*(extra.q - 2.0IL*atanhl(input.L) ) )/input.N;	   //good
   for (int j = 0; j < input.N; j++) {
     q = 2.L*PI*(1.0L*j/input.N - 0.5L);
-    extra.dq[j] = (2.0L*input.L)/(1.0L + input.L*input.L + (1.0L - input.L*input.L)*cosl(q-extra.q));
+    //extra.dq[j] = (2.0L*input.L)/(1.0L + input.L*input.L + (1.0L - input.L*input.L)*cosl(q-extra.q));	// this is actually dU/dQ
+    extra.newdU[j] = (2.0L*input.L)/(1.0L + input.L*input.L + (1.0L - input.L*input.L)*cosl(q-extra.q)); // now this is dU/dQ
+    extra.newdQ[j] = (1.0L + input.L*input.L + (1.0L - input.L*input.L)*cosl(q-extra.q))/(2.0L*input.L); // and this is dQ/dU
   }
 }
 void clean_up_mesh() {
@@ -468,7 +501,10 @@ void clean_up_mesh() {
    fftwl_free(extra.dV);
    fftwl_free(extra.B);
    fftwl_free(extra.w);
-   fftwl_free(extra.dq); 
+   
+   //fftwl_free(extra.dq);
+   fftwl_free(extra.newdQ);  
+   fftwl_free(extra.newdU); 
 #if RK4
    free_rk4();//#####################################################################
 #elif DIRK4
@@ -490,7 +526,9 @@ void reinitialize_mesh() {
    if (!(extra.dV = fftwl_malloc(input.N*sizeof(fftwl_complex)))) debug_msg("Reinitialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);
    if (!(extra.B = fftwl_malloc(input.N*sizeof(fftwl_complex)))) debug_msg("Reinitialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);
    if (!(extra.w = fftwl_malloc((input.N/2-1)*sizeof(fftwl_complex)))) debug_msg("Reinitialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);
-   if (!(extra.dq = fftwl_malloc((input.N)*sizeof(long double)))) debug_msg("Reinitialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);
+//   if (!(extra.dq = fftwl_malloc((input.N)*sizeof(long double)))) debug_msg("Reinitialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);
+   if (!(extra.newdQ = fftwl_malloc((input.N)*sizeof(long double)))) debug_msg("Reinitialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);
+   if (!(extra.newdU = fftwl_malloc((input.N)*sizeof(long double)))) debug_msg("Reinitialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);
    //------------ moved init_rk4 from here
    FILE *fh = fopen("output.log","a");
    fprintf(fh, "Reinitialize Data: initialized FFTW plans with mode %d\n", FMODE);
@@ -596,7 +634,9 @@ void initialize_auxiliary_arrays() {
    if (!(extra.dV = fftwl_malloc(input.N*sizeof(fftwl_complex)))) debug_msg("Reinitialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);
    if (!(extra.B = fftwl_malloc(input.N*sizeof(fftwl_complex)))) debug_msg("Initialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);
    if (!(extra.w = fftwl_malloc((input.N/2-1)*sizeof(fftwl_complex)))) debug_msg("Initialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);
-   if (!(extra.dq = fftwl_malloc((input.N)*sizeof(long double)))) debug_msg("Initialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);
+   //if (!(extra.dq = fftwl_malloc((input.N)*sizeof(long double)))) debug_msg("Initialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);
+   if (!(extra.newdQ = fftwl_malloc((input.N)*sizeof(long double)))) debug_msg("Initialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);
+   if (!(extra.newdU = fftwl_malloc((input.N)*sizeof(long double)))) debug_msg("Initialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);
    //------------ 
    p0f = fftwl_plan_dft_1d(input.N, tmp0, tmp0, FFTW_FORWARD, FMODE);
    p1f = fftwl_plan_dft_1d(input.N, tmp1, tmp1, FFTW_FORWARD, FMODE);
@@ -719,15 +759,15 @@ void simulate() {
    //long double u;
    
    ref_nog = 0;
-   for (int j = 0; j < input.N; j++) {
+   /*for (int j = 0; j < input.N; j++) {
      q = PI*(2.L*j/input.N - 1.0L);
      u = input.u + 2.L*atan2l(input.L*sinl(0.5L*(q-extra.q)), cosl(0.5L*(q-extra.q)));
      array.Q[j] = 1.L; //1E-13*cexpl(-1.IL*u);
      array.V[j] = -0.05IL*(1.L/ctanl(0.5L*(u-0.12IL)) - 1.IL) + 0.00IL*(1.L/ctanl(0.5L*(u-0.24IL)) - 1.IL); // run 8&9
 
-     array.Q[j] = 1.L + 0.4L*cexpl(-1.IL*u); 	//+0.4 (run_4) // +0.3 (run_6)
+     array.Q[j] = 1.L + 0.5L*cexpl(-1.IL*u); 	//+0.4 (run_4) // +0.3 (run_6)
      array.V[j] = -0.75IL*exp(-1.IL*u);		//-0.85I (run_5) // -0.6 (run 6)
-   }
+   }*/
 
 
 
