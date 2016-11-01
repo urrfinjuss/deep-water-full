@@ -5,7 +5,7 @@ static params input;
 static data array;
 static aux extra;
 static consq motion;
-static fftwl_complex *tmp0, *tmp1, *tmp2, *tmp3, *qB, *vB, *z;
+static fftwl_complex *tmp0, *tmp1, *tmp2, *tmp3, *qB, *vB, *z, *Rz;
 static fftwl_complex q;
 static fftwl_plan p0f, p1f, p2f;
 static fftwl_plan p0b, p1b;
@@ -31,6 +31,39 @@ void init_timemarching() {
   printf("No Time Marching Selected.\n"); exit(1);
 #endif
 }
+
+void
+
+
+void inverseZq() {
+	//memcpy(tmp0, in, (input.N)*sizeof(fftwl_complex));
+	for (long int j = 0; j < input.N; j++) {
+		tmp0[j] = array.Q[j]*array.Q[j]/input.N;			///extra.dq[j]				// matrix
+		tmp1[j] = (1.L - array.Q[j]*array.Q[j])/input.N;		// rhs
+	}
+	fftwl_execute(p0b);
+	fftwl_execute(p1b);
+	Rz[0] = tmp1[0]/tmp0[0]; 
+	//printf("%.12LE\t%.12LE\n", creall(tmp0[0]), cimagl(tmp0[0])); 
+	
+	for (long int j = 1; j < input.N/2; j++) {
+		fftwl_complex sum = 0.L;
+		//tmp0[j] = powl(-1,j)*tmp0[j];
+		for (long int l = 0; l < j; l++) {
+			sum += tmp0[j-l]*Rz[l];
+		}
+		Rz[j] = (tmp1[j]-sum/tmp0[0]);
+	}
+	for (long int j = 0; j < 6; j++) printf("%ld\t%.12LE\n", j, creal(tmp0[j]));
+	for (long int j = 1; j < input.N; j++) Rz[j] = -Rz[j]; 			//	works with L = 1 
+	memset(Rz+input.N/2, 0, (input.N/2)*sizeof(fftwl_complex));
+	
+	//memcpy(tmp1, Rz, (input.N)*sizeof(fftwl_complex));
+	fftwl_execute(p1f);
+	//for (long int j = 0; j < input.N; j++) tmp1[j] = tmp1[j]*extra.dq[j];
+	primitive_output("zq_good.txt",tmp1);
+}
+
 
 
 void compute_aux_arrays(fftwl_complex *inQ, fftwl_complex *inV) {
@@ -98,12 +131,18 @@ void get_surface(char* fname) {
 
 void get_integrals() {
 
+  inverseZq();
+  primitive_output("z_good.txt", Rz);
   for (long int j = 0; j < input.N; j++) {
     tmp0[j] = array.V[j]*extra.dq[j]/cpowl(array.Q[j], 2.0L)/input.N;
-    tmp1[j] = -1.0IL*extra.dq[j]*(1.0L - cpowl(array.Q[j], -2.0L))/input.N;
+    tmp1[j] = -1.0IL*extra.dq[j]*(1.0L - cpowl(array.Q[j], -2.0L))/input.N   * (1.IL);   // 
   }
+  primitive_output("zq_bad.txt",tmp1);
   fftwl_execute(p0b);
   fftwl_execute(p1b);  
+  
+  primitive_output("z_bad.txt", tmp1);
+  exit(1);
   motion.K = 0.L;
   tmp1[0] = 0.L;
   memset(tmp1+input.N/2,0,sizeof(fftwl_complex)*input.N/2);
@@ -419,6 +458,7 @@ void clean_up_mesh() {
    fftwl_free(array.Q);
    fftwl_free(array.V);
    fftwl_free(z); 
+   fftwl_free(Rz); 
    fftwl_free(tmp2); 
    fftwl_free(tmp3); 
    fftwl_free(k);
@@ -438,6 +478,7 @@ void clean_up_mesh() {
 
 void reinitialize_mesh() {
    if (!(z = fftwl_malloc(input.N*sizeof(fftwl_complex)))) debug_msg("Reinitialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);
+   if (!(Rz = fftwl_malloc(input.N*sizeof(fftwl_complex)))) debug_msg("Reinitialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);
    if (!(array.Q = fftwl_malloc(input.N*sizeof(fftwl_complex)))) debug_msg("Reinitialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);
    if (!(array.V = fftwl_malloc(input.N*sizeof(fftwl_complex)))) debug_msg("Reinitialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);  
    if (!(tmp2 = fftwl_malloc(input.N*sizeof(fftwl_complex)))) debug_msg("Reinitialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);
@@ -542,6 +583,7 @@ void hfilter() {
 
 void initialize_auxiliary_arrays() {
    if (!(z = fftwl_malloc(input.N*sizeof(fftwl_complex)))) debug_msg("Reinitialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);
+   if (!(Rz = fftwl_malloc(input.N*sizeof(fftwl_complex)))) debug_msg("Reinitialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);
    if (!(tmp0 = fftwl_malloc(input.N*sizeof(fftwl_complex)))) debug_msg("Initialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);
    if (!(tmp1 = fftwl_malloc(input.N*sizeof(fftwl_complex)))) debug_msg("Initialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);
    if (!(tmp2 = fftwl_malloc(input.N*sizeof(fftwl_complex)))) debug_msg("Initialize Data: memory allocation failed\nInitialize Data: complete\n", EXIT_TRUE);
@@ -572,7 +614,7 @@ void free_arrays() {
    debug_msg("Free Data: initiated\n",EXIT_FALSE);
    free(array.Q);
    free(array.V);
-   free(z);
+   free(z); 	  free(Rz);
    free(tmp0);    fftwl_destroy_plan(p0f);
    free(tmp1);    fftwl_destroy_plan(p1f);
    free(tmp2);    fftwl_destroy_plan(p0b);
@@ -677,7 +719,7 @@ void simulate() {
    //long double u;
    
    ref_nog = 0;
-   /*for (int j = 0; j < input.N; j++) {
+   for (int j = 0; j < input.N; j++) {
      q = PI*(2.L*j/input.N - 1.0L);
      u = input.u + 2.L*atan2l(input.L*sinl(0.5L*(q-extra.q)), cosl(0.5L*(q-extra.q)));
      array.Q[j] = 1.L; //1E-13*cexpl(-1.IL*u);
@@ -685,7 +727,7 @@ void simulate() {
 
      array.Q[j] = 1.L + 0.4L*cexpl(-1.IL*u); 	//+0.4 (run_4) // +0.3 (run_6)
      array.V[j] = -0.75IL*exp(-1.IL*u);		//-0.85I (run_5) // -0.6 (run 6)
-   }*/
+   }
 
 
 

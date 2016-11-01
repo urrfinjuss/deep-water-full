@@ -72,6 +72,7 @@ extern void load_data();
 // output.c
 extern void init_output(params_ptr ginput, aux_ptr gextra);
 extern void debug_msg(char* in, int EXITF);
+extern void primitive_output(char *fname, fftwl_complex *in);
 extern void basic_output(char *fname, fftwl_complex *in1, fftwl_complex *in2, long double time);
 extern void spec_output(char *fname, fftwl_complex *in1, fftwl_complex *in2, long double time);
 
@@ -80,6 +81,7 @@ extern void init_lowlevel();
 extern void init_timemarching(); 
 extern void initialize_auxiliary_arrays();
 extern void initialize_data();
+extern void inverseQ(fftwl_complex *in, fftwl_complex *out);
 extern void hfilter();
 extern void get_integrals();
 extern void get_surface(char* fname);
