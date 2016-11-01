@@ -7,6 +7,7 @@ C_FSW   = main.c llevel.c exrk4.c dirk4.c output.c parameters.c
 CC      = gcc
 LINK    = gcc
 OPT     = -march=native -Ofast -ffast-math -mfpmath=387 -std=gnu99 -Wall -Wpointer-arith -Wcast-align -fno-schedule-insns -fschedule-insns2 -fstrict-aliasing -funroll-loops -fprefetch-loop-arrays
+
 #-----------------------------
 #generic
 

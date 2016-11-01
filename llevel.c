@@ -357,16 +357,16 @@ void restore_arrays() {
 void call_L2_refine() {
 	char fname[80];
 	move_mesh(track_singularity(), input.L, 2*input.N);
-    //fftwl_complex mon = check_resolution();
+    	//fftwl_complex mon = check_resolution();
 	     
-	sprintf(fname, "spec_l2r%ld.txt", input.refN+1);
-  	get_spectrum(fname);
-    sprintf(fname, "L2: Using Gravity CFL: dt = %.12LE\n", motion.time);
-    debug_msg(fname, EXIT_FALSE);
+	sprintf(fname, "spec_l2r%ld.txt", input.refN+1);	
+	get_spectrum(fname);
+	sprintf(fname, "L2: Using Gravity CFL: dt = %.12LE\n", motion.time);
+	debug_msg(fname, EXIT_FALSE);
 #if RK4
-    modify_rk4skip(sqrtl(1.5L));
+    	modify_rk4skip(sqrtl(1.5L));
 #elif DIRK4
-    modify_dirk4skip(sqrtl(1.5L));
+    	modify_dirk4skip(sqrtl(1.5L));
 #endif
 }
 

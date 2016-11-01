@@ -57,6 +57,7 @@ typedef struct input {
   char rname[128];		// filename with binary initial data and input structure
   long double g, s;		// gravity and surface tension
   unsigned long int N;		// number of grid points
+  unsigned long int ascii;	// flags if reading a text file
   long double L, u;		// transformation parameters
   long double tl;		// tolerance for refinement
   long int refN;		// refinement counter

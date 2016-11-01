@@ -25,6 +25,7 @@ void load_data() {
 
   if (fh) {
 	if (input->d) rflag = 1;	// read from Pade data
+	if (input->ascii) rflag = 3;	// read from ascii restart
 	else rflag = 0;			// read from binary restart
   } else rflag = 2;			// start with default IC
 
