@@ -64,15 +64,51 @@ typedef struct input {
   long int d;			// number of poles
 } params, *params_ptr;
 
-// --------  Variables
-
 extern params state;
-extern long double 	**tmpr;
-extern fftwl_complex 	**tmpc;
 
-// --------  Functions
-// memory.c
-extern void allocate_memory();
-extern void deallocate_memory();
-extern void backup_arrays();
-extern void init_memory();
+// parameters.c
+extern void init_parameters(params_ptr ginput, aux_ptr gextra, data_ptr garray);
+extern void load_parameters(int argc, char* argv[]);
+extern void load_data();
+
+// output.c
+extern void init_output(params_ptr ginput, aux_ptr gextra);
+extern void debug_msg(char* in, int EXITF);
+extern void primitive_output(char *fname, fftwl_complex *in);
+extern void basic_output(char *fname, fftwl_complex *in1, fftwl_complex *in2, long double time);
+extern void spec_output(char *fname, fftwl_complex *in1, fftwl_complex *in2, long double time);
+
+// llevel.c
+extern void init_lowlevel(); 
+extern void init_timemarching(); 
+extern void initialize_auxiliary_arrays();
+extern void initialize_data();
+extern void inverseQ(fftwl_complex *in, fftwl_complex *out);
+extern void hfilter();
+extern void get_integrals();
+extern void get_surface(char* fname);
+extern void get_spectrum(char* fname);
+extern fftwl_complex check_resolution();
+extern void compute_aux_arrays(fftwl_complex *inQ, fftwl_complex *inV);
+extern void move_mesh(long double uin, long double Lin, long int Nin);
+extern void set_aux();
+extern void resolution_monitor(long int *iter);
+extern void read_pade();
+extern void simulate();
+extern void find_max_height(fftwl_complex *in, long double *x_peak, long double *y_peak, long double *curv);
+
+// exrk4.c
+extern void init_exrk4_module(params_ptr ginput, aux_ptr gextra, data_ptr garray, consq_ptr gmotion);
+extern void modify_rk4skip(long double factor);
+long double init_rk4();
+extern void evolve_rk4();
+extern void free_rk4();
+
+// dirk4.c
+extern void init_dirk4_module(params_ptr ginput, aux_ptr gextra, data_ptr garray, consq_ptr gmotion);
+extern void modify_dirk4skip(long double factor);
+long double init_dirk4();
+extern void dirk4_step();
+extern void evolve_dirk4();
+extern void free_dirk4();
+

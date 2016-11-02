@@ -1,7 +1,7 @@
 FSW     = fsw_dw.x
 
 #List of sources
-C_FSW   = main.c llevel.c exrk4.c dirk4.c output.c parameters.c
+C_FSW   = main.c memory.c
 
 # Compilers -Ofast -ffast-math -mfpmath=387
 CC      = gcc

@@ -1,13 +1,15 @@
 #include "header.h"
 
+params state;
+
 int main( int argc, char* argv[]) {
-  init_lowlevel();
-  load_parameters(argc, argv);
-  init_timemarching();
-  load_data();
-  
 
+  state.N = 256;
 
-  simulate();
+  //load_parameters(argc, argv);
+  init_memory();
+  allocate_memory();
+  backup_arrays();
+  printf("Complete\n");
   
 }
