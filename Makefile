@@ -1,7 +1,7 @@
 FSW     = fsw_dw.x
 
 #List of sources
-C_FSW   = main.c memory.c
+C_FSW   = main.c memory.c array_func.c input.c output.c mapping.c
 
 # Compilers -Ofast -ffast-math -mfpmath=387
 CC      = gcc
