@@ -31,11 +31,13 @@ typedef struct conformal_mapping {
 } map, *map_ptr;
 
 // -------- Global Variables
-
 extern params state;
 extern map conf;
 extern long double 	**tmpr;
 extern fftwl_complex 	**tmpc;
+extern fftwl_complex	**data;
+extern fftwl_plan 	ft0, ift0;
+extern fftwl_plan 	ft1, ift1;
 
 // --------  Functions
 // memory.c
@@ -43,11 +45,24 @@ extern void allocate_memory();
 extern void deallocate_memory();
 extern void backup_arrays();
 extern void init_memory();
+extern void fft_shift(fftwl_complex *in);
 
 // input.c
 extern void load_ascii();
+extern void set_initial_data();
 extern void load_parameters(int argc, char *argv[]);
 extern void read_input(char *fname);
+
+// array_func.c
+extern void init_arrayf();
+extern void div_jacobian(fftwl_complex *in, fftwl_complex *out);
+extern void inverse(fftwl_complex *a, fftwl_complex *x);
+extern void square_ft(fftwl_complex *Z, fftwl_complex *x);
+extern void compute_zero_mode(fftwl_complex *in, long double *out);
+
+// hlevel.c
+extern void convertZtoQ(fftwl_complex *in, fftwl_complex *out);
+extern void convertQtoZ(fftwl_complex *in, fftwl_complex *out);
 
 // mapping.c
 extern void set_mapping();

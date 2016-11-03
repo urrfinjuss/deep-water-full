@@ -7,18 +7,21 @@ static unsigned long int n_local_size;
 static const unsigned long int n_complex_arrays = COMPLEX_ARRAYS;
 static const unsigned long int n_real_arrays = REAL_ARRAYS;
 static fftwl_complex 	*bQ, *bV;
+static fftwl_complex	*aux_array;
 
 fftwl_plan	ft0, ift0;
 fftwl_plan	ft1, ift1;
 long double 	**tmpr;
 fftwl_complex 	**tmpc;
+fftwl_complex 	**data;
 
 void init_memory() {
   n_local_size =	state.number_modes;
   printf("Requesting %lu complex arrays of length %lu\n", n_complex_arrays, n_local_size);
   printf("Requesting %lu real arrays of length %lu\n", n_real_arrays, n_local_size);
   tmpc = fftwl_malloc(n_complex_arrays*sizeof(fftwl_complex *)); 
-  tmpr = fftwl_malloc(n_real_arrays*sizeof(long double *)); 
+  tmpr = fftwl_malloc(n_real_arrays*sizeof(long double *));   
+  data = fftwl_malloc(2*sizeof(fftwl_complex *)); 
 }
 
 void allocate_memory() {
@@ -32,6 +35,10 @@ void allocate_memory() {
   }
   conf.dq =  fftwl_malloc(n_local_size*sizeof(long double));
   conf.w =  fftwl_malloc((n_local_size/2-1)*sizeof(fftwl_complex));
+  init_arrayf();
+  aux_array = fftwl_malloc(n_local_size*sizeof(fftwl_complex));
+  data[0] = fftwl_malloc(n_local_size*sizeof(fftwl_complex));
+  data[1] = fftwl_malloc(n_local_size*sizeof(fftwl_complex));
   ft0  = fftwl_plan_dft_1d(n_local_size, tmpc[0], tmpc[0], FFTW_FORWARD, FMODE);
   ft1  = fftwl_plan_dft_1d(n_local_size, tmpc[1], tmpc[1], FFTW_FORWARD, FMODE);
   ift0 = fftwl_plan_dft_1d(n_local_size, tmpc[0], tmpc[0], FFTW_BACKWARD, FMODE);
@@ -68,10 +75,21 @@ void backup_arrays() {
 void deallocate_memory() {
   for (long int j = 0; j < n_complex_arrays; j++) fftwl_free(tmpc[j]);
   for (long int j = 0; j < n_real_arrays; j++) fftwl_free(tmpr[j]);	 
-  fftwl_free(conf.dq); fftwl_free(conf.w); 
+  fftwl_free(conf.dq);   fftwl_free(conf.w); 
+  fftwl_free(aux_array); fftwl_free(data[0]);  fftwl_free(data[1]);
   fftwl_destroy_plan(ft0);
   fftwl_destroy_plan(ft1);
   fftwl_destroy_plan(ift0);
   fftwl_destroy_plan(ift1);
 }
+
+void fft_shift(fftwl_complex *in){
+  for (long int j = 0; j < n_local_size/2; j++) {
+    aux_array[j] 		= in[n_local_size/2+j];
+    aux_array[j+n_local_size/2]	= in[j]; 
+  }
+  memcpy(in, aux_array, n_local_size*sizeof(fftwl_complex));
+}
+
+
 

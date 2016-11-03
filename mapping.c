@@ -6,7 +6,6 @@ void set_mapping() {
   for (long int j = 0; j < state.number_modes/2-1; j++) {
     conf.w[j] = cexpl(-1.0IL*(j+1)*(conf.origin_offset - 2.0IL*atanhl(conf.scaling)))*overN;
   }
-  
   long double a = (1.0L - powl(conf.scaling, 2))/(1.0L + powl(conf.scaling, 2));
   long double b = 0.5L*(1.0L + powl(conf.scaling, 2))/conf.scaling;
   for (int j = 0; j < state.number_modes; j++) {
@@ -14,3 +13,4 @@ void set_mapping() {
     conf.dq[j] = b*(1.0L + a*cosl(q - conf.origin_offset));
   }
 }
+

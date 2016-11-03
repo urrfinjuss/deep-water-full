@@ -1,15 +1,66 @@
 #include "header.h"
 
-static long double overN;
 
-void init_arrayf() {
-  overN = 1.L/state.number_modes;
+void compute_zero_mode(fftwl_complex *in, long double *out) {
+  fftwl_complex 	w = cexpl(1.IL*conf.origin_offset);
+  long double 		b = 0.5L*(1.L + powl(conf.scaling, 2))/conf.scaling;
+  long double 		xi = (1.L - powl(conf.scaling, 2))/(1.L + powl(conf.scaling, 2));
+  long double S0 = 0.L;
+
+  for (long int j = state.number_modes/2-1; j > 0; j--) {
+    S0 += -2.L*j*in[j]*conjl(in[j]);
+  }
+  tmpc[2][0] = -0.5L*xi*conjl(w);
+  for (long int j = 1; j < state.number_modes/2-1; j++) {
+    tmpc[2][j] = tmpc[2][0]/(1.L - conjl(tmpc[2][0])*tmpc[2][j-1]); 
+  }
+  tmpc[3][0] = in[1]/b - S0*conjl(tmpc[2][0]);
+  for (long int j = 1; j < state.number_modes/2-1; j++) {
+    tmpc[3][j] = in[j+1]/b - conjl(tmpc[2][0])*tmpc[3][j-1];
+    tmpc[3][j] = tmpc[3][j]/(1.L - conjl(tmpc[2][0])*tmpc[2][j-1]);
+  } 
+  tmpc[1][state.number_modes/2-1] = tmpc[3][state.number_modes/2-2];
+  for (long int j = state.number_modes/2-2; j > 0; j--) {
+    tmpc[1][j] = tmpc[3][j]-tmpc[2][j]*tmpc[1][j+1];
+  }
+  tmpc[1][0] = S0;
+  *out = b*creall(tmpc[1][1]*tmpc[2][0]+conjl(tmpc[1][1]*tmpc[2][0]) + S0);
+  printf("b * S0 = %.19LE\n", b*S0);
+  printf("Mapping correction = %.19LE\n", *out - b*S0);
+}
+
+void div_jacobian(fftwl_complex *in, fftwl_complex *out) {
+  // solve a tridiagonal system z_q q_u = b
+  // b        -- inverse Fourier coefficients: b = Z_u - 1
+  // Note:    -- b must have b[0] = 0, like Z_u - 1
+  // Note:       not in-place safe.
+  fftwl_complex 	w = cexpl(1.IL*conf.origin_offset);
+  long double 		b = 0.5L*(1.L + powl(conf.scaling, 2))/conf.scaling;
+  long double 		xi = (1.L - powl(conf.scaling, 2))/(1.L + powl(conf.scaling, 2));
+
+  fft_shift(in);
+  tmpc[2][0] = -0.5L*xi*conjl(w);
+  for (long int j = 1; j < state.number_modes; j++) {
+    tmpc[2][j] = tmpc[2][0]/(1.L - conjl(tmpc[2][0])*tmpc[2][j-1]); 
+  }
+  tmpc[3][0] = in[0]/b;
+  for (long int j = 1; j < state.number_modes; j++) {
+    tmpc[3][j] = in[j]/b - conjl(tmpc[2][0])*tmpc[3][j-1];
+    tmpc[3][j] = tmpc[3][j]/(1.L - conjl(tmpc[2][0])*tmpc[2][j-1]);
+  } 
+  out[state.number_modes-1] = tmpc[3][state.number_modes-1];
+  for (long int j = state.number_modes-2; j > -1; j--) {
+    out[j] = tmpc[3][j]-tmpc[2][j]*out[j+1];
+  }
+  fft_shift(out);
+  fft_shift(in);
 }
 
 void inverse(fftwl_complex *a, fftwl_complex *x) {
   // inverts a*x = 1 to find x by series inversion
-  // a,b -- input inverse Fourier coefficients,
+  // a   -- input inverse Fourier coefficients,
   // x   -- output inverse Fourier coefficients
+  // Note: not in-place safe: a and x cannot be the same
   x[0] = 1.0L/a[0];
   for (long int j = 1; j < state.number_modes/2; j++) {
     fftwl_complex sum = 0.L;

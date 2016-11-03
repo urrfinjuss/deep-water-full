@@ -5,17 +5,20 @@ void load_ascii() {
   if (fh) {
     char line[512], *v[5];
     long int		N;
-    long double		L, u, T;
+    long double		T;
     for (int j = 0; j < 5; j++) v[j] = malloc(512);
     if (fgets(line, 512, fh) != NULL);
     if (fgets(line, 512, fh) != NULL) sscanf(line, "# N = %s\tL = %s\tu = %s\tT = %s", v[0], v[1], v[2], v[3]);
     if (fgets(line, 512, fh) != NULL);
+
     N = strtol(v[0], NULL, 10);
-    L = strtold(v[1], NULL);
-    u = strtold(v[2], NULL);
     T = strtold(v[3], NULL);
+
+    conf.scaling = strtold(v[1], NULL);
+    conf.image_offset = strtold(v[2], NULL);
+
     printf("Restart:\ntime = %.19LE\nN modes = %ld\n", T, N); 
-    printf("Conformal L = %.19LE\nConformal u = %.19LE\n", L, u);
+    printf("Conformal L = %.19LE\nConformal u = %.19LE\n", conf.scaling, conf.image_offset);
     if (N != state.number_modes) {
       printf("Incompatible Grids\nPlaceholder\n");
       exit(1);
@@ -27,8 +30,8 @@ void load_ascii() {
 	exit(1);
       }
       sscanf(line, "%s\t%s\t%s\t%s\t%s", v[0], v[1], v[2], v[3], v[4]);
-      tmpc[0][counter] = strtold(v[1], NULL) + 1.0IL*strtold(v[2],NULL);
-      tmpc[1][counter] = strtold(v[3], NULL) + 1.0IL*strtold(v[4],NULL);
+      data[0][counter] = strtold(v[1], NULL)-strtold(v[0], NULL) + 1.0IL*strtold(v[2],NULL);
+      data[1][counter] = strtold(v[3], NULL) + 1.0IL*strtold(v[4],NULL);
       counter++;
     }
     fclose(fh);    
