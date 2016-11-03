@@ -43,14 +43,11 @@ void convertZtoQ(fftwl_complex *in, fftwl_complex *out) {
   // ----------------------------------------------------- //
   long double overN = 1.L/state.number_modes;
 
-  //complex_array_out("z-tilde.ph.txt", in);
   memcpy(tmpc[0], in, state.number_modes*sizeof(fftwl_complex));
   fftwl_execute(ift0);
-  //complex_array_out("z-tilde.ft.txt", tmpc[0]);  
   for (long int j = 0; j < state.number_modes/2; j++) {
     tmpc[0][j] = -1.0IL*j*tmpc[0][j]*overN;
   }
-  //tmpc[0][0] = 0.;
   memset(tmpc[0]+state.number_modes/2, 0, (state.number_modes/2)*sizeof(fftwl_complex));
   fftwl_execute(ft0);
   for (long int j = 0; j < state.number_modes; j++) {
@@ -60,8 +57,7 @@ void convertZtoQ(fftwl_complex *in, fftwl_complex *out) {
   fftwl_execute(ift0);
   complex_array_out("zu.ft.txt",tmpc[0]);
   inverse(tmpc[0], tmpc[1]);
-  //square_ft(tmpc[1], tmpc[0]);
-  fftwl_execute(ft1);
-  complex_array_out("R.ph.txt",tmpc[1]);
+  square_ft(tmpc[1], tmpc[0]);
+  fftwl_execute(ft0);
   memcpy(out, tmpc[0], state.number_modes*sizeof(fftwl_complex));
 }
