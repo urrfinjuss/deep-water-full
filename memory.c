@@ -35,7 +35,6 @@ void allocate_memory() {
   }
   conf.dq =  fftwl_malloc(n_local_size*sizeof(long double));
   conf.w =  fftwl_malloc((n_local_size/2-1)*sizeof(fftwl_complex));
-  init_arrayf();
   aux_array = fftwl_malloc(n_local_size*sizeof(fftwl_complex));
   data[0] = fftwl_malloc(n_local_size*sizeof(fftwl_complex));
   data[1] = fftwl_malloc(n_local_size*sizeof(fftwl_complex));

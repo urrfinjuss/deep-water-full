@@ -47,8 +47,8 @@ int main( int argc, char* argv[]) {
 
 
   real_array_out("conf.dq.txt", conf.dq);
-  complex_array_out("zread.txt", tmpc[0]);
-  complex_array_out("vread.txt", tmpc[1]);
+  complex_array_out("zread.txt", data[0]);
+  complex_array_out("vread.txt", data[1]);
   /*
   fftwl_execute(ift0);
   for (long int j = 0; j < state.number_modes/2; j++) {
@@ -58,10 +58,10 @@ int main( int argc, char* argv[]) {
   complex_array_out("zq_direct.txt", tmpc[0]);
   */
   
-  convertZtoQ(tmpc[0], tmpc[1]); 
+  convertZtoQ(data[0], tmpc[1]); 
   complex_array_out("qread.txt", tmpc[1]);
-  convertQtoZ(tmpc[1], tmpc[0]);  
-  complex_array_out("z-no-mean.txt", tmpc[0]);
+  //convertQtoZ(tmpc[1], tmpc[0]);  
+  //complex_array_out("z-no-mean.txt", tmpc[0]);
 
   backup_arrays();
   printf("Complete\n");
