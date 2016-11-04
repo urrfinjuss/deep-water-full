@@ -35,6 +35,9 @@ void allocate_memory() {
   aux_array = fftwl_malloc(state.number_modes*sizeof(fftwl_complex));
   data[0] = fftwl_malloc(state.number_modes*sizeof(fftwl_complex));
   data[1] = fftwl_malloc(state.number_modes*sizeof(fftwl_complex));
+  memset(data[0], 0, state.number_modes*sizeof(fftwl_complex));
+  memset(data[1], 0, state.number_modes*sizeof(fftwl_complex));
+
   ft0  = fftwl_plan_dft_1d(state.number_modes, tmpc[0], tmpc[0], FFTW_FORWARD, FMODE);
   ft1  = fftwl_plan_dft_1d(state.number_modes, tmpc[1], tmpc[1], FFTW_FORWARD, FMODE);
   ift0 = fftwl_plan_dft_1d(state.number_modes, tmpc[0], tmpc[0], FFTW_BACKWARD, FMODE);

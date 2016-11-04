@@ -42,27 +42,27 @@ void remap(map_ptr new_map, unsigned long int N) {
     unsigned long int mem_offset = state.number_modes-N0/2;
     memcpy(tmpc[0], saveQ, (N0/2)*sizeof(fftwl_complex));
     memcpy(tmpc[1], saveV, (N0/2)*sizeof(fftwl_complex));
-    memcpy(tmpc[0]+mem_offset, saveQ, (N0/2)*sizeof(fftwl_complex));
-    memcpy(tmpc[1]+mem_offset, saveV, (N0/2)*sizeof(fftwl_complex));
+    memcpy(tmpc[0]+mem_offset, saveQ+N0/2, (N0/2)*sizeof(fftwl_complex));
+    memcpy(tmpc[1]+mem_offset, saveV+N0/2, (N0/2)*sizeof(fftwl_complex));
   } else if (N0 > state.number_modes) {
     unsigned long int mem_offset = N0 - state.number_modes/2;
     memcpy(tmpc[0], saveQ, (state.number_modes/2)*sizeof(fftwl_complex));
     memcpy(tmpc[1], saveV, (state.number_modes/2)*sizeof(fftwl_complex));
-    memcpy(tmpc[0]+mem_offset, saveQ, (state.number_modes/2)*sizeof(fftwl_complex));
-    memcpy(tmpc[1]+mem_offset, saveV, (state.number_modes/2)*sizeof(fftwl_complex));
+    memcpy(tmpc[0]+state.number_modes/2, saveQ+mem_offset, (state.number_modes/2)*sizeof(fftwl_complex));
+    memcpy(tmpc[1]+state.number_modes/2, saveV+mem_offset, (state.number_modes/2)*sizeof(fftwl_complex));
   } else {
     memcpy(tmpc[0], saveQ, state.number_modes*sizeof(fftwl_complex));
     memcpy(tmpc[1], saveV, state.number_modes*sizeof(fftwl_complex));
   }
   fftwl_free(saveQ);
   fftwl_free(saveV); 
-  long double q, q_r;
+  long double q, q_r, q0 = PI + conf.origin_offset;
   for (long int j = 0; j < state.number_modes; j++) {
-    q   = 2.L*PI*(j*overN - 0.5L) - new_map->origin_offset;
-    q_r = PI + conf.origin_offset + 2.0L*atan2l(beta+(new_map->scaling)*tanl(0.5L*q), conf.scaling*(1.0L - new_map->scaling*beta*tanl(0.5L*q)));
-    for (long int l = N0/2-1; l > -1; l--) {
+    q   = new_map->scaling*tanl(1.L*PI*(j*overN - 0.5L) - 0.5L*new_map->origin_offset);
+    q_r = q0 + 2.0L*atan2l(beta+q, conf.scaling*(1.0L - beta*q));
+    for (long int l = state.number_modes/2-1; l > -1; l--) {
       data[0][j] += tmpc[0][l]*cexpl(-1.IL*l*q_r)*overN0; 
-      data[0][j] += tmpc[1][l]*cexpl(-1.IL*l*q_r)*overN0;
+      data[1][j] += tmpc[1][l]*cexpl(-1.IL*l*q_r)*overN0;
     } 
   }
   conf.scaling = new_map->scaling;
