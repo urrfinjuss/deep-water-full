@@ -58,10 +58,17 @@ int main( int argc, char* argv[]) {
   complex_array_out("zq_direct.txt", tmpc[0]);
   */
   
-  convertZtoQ(data[0], tmpc[1]); 
-  complex_array_out("qread.txt", tmpc[1]);
-  //convertQtoZ(tmpc[1], tmpc[0]);  
-  //complex_array_out("z-no-mean.txt", tmpc[0]);
+  
+  complex_array_out("zt-original.txt", data[0]);
+  convertZtoQ(data[0], data[1]);
+  
+  //  Correct answer is here:
+  memcpy(tmpc[0], data[0], state.number_modes*sizeof(fftwl_complex));
+  // 
+ 
+  complex_array_out("qread.txt", data[1]);
+  convertQtoZ(data[1], data[0]);  
+  complex_array_out("zt-recovered.txt", data[0]);
 
   backup_arrays();
   printf("Complete\n");

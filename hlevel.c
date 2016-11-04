@@ -7,6 +7,7 @@ void convertQtoZ(fftwl_complex *in, fftwl_complex *out) {
   // 		   z_u Q^2 = 1				   //
   // ----------------------------------------------------- //
   long double overN = 1.L/state.number_modes;
+  long double y0 = 0.L;
 
   for (long int j = 0; j < state.number_modes; j++) {
     tmpc[0][j] = in[j]*in[j]*overN;
@@ -19,16 +20,12 @@ void convertQtoZ(fftwl_complex *in, fftwl_complex *out) {
   }
   fftwl_execute(ift1);
   div_jacobian(tmpc[1], tmpc[0]);
-  for (long int j = 1; j < state.number_modes; j++) {
+  for (long int j = 1; j < state.number_modes/2; j++) {
     tmpc[0][j] = 1.IL*tmpc[0][j]/j;
   }
-  //fftwl_execute(ft0);
-  //memcpy(out, tmpc[0], state.number_modes*sizeof(fftwl_complex));
-  // tmpc[0] <-- contains the correct y1, y2, ... (but not y0)
-  long double y0 = 0.L;
+  memset(tmpc[0]+state.number_modes/2, 0, state.number_modes/2*sizeof(fftwl_complex));
   compute_zero_mode(tmpc[0], &y0);
-  //tmpc[0][0] = 1.IL*y0;
-  printf("Zero Mode of Z is %.19LE\n", cimagl(tmpc[0][0]));
+  tmpc[0][0] = 1.IL*y0;
   fftwl_execute(ft0);
   memcpy(out, tmpc[0], state.number_modes*sizeof(fftwl_complex));
 }
@@ -53,9 +50,7 @@ void convertZtoQ(fftwl_complex *in, fftwl_complex *out) {
   for (long int j = 0; j < state.number_modes; j++) {
     tmpc[0][j] = (tmpc[0][j]*conf.dq[j] + 1.L)*overN; 
   }
-  complex_array_out("zu.ph.txt",tmpc[0]);
   fftwl_execute(ift0);
-  complex_array_out("zu.ft.txt",tmpc[0]);
   inverse(tmpc[0], tmpc[1]);
   square_ft(tmpc[1], tmpc[0]);
   fftwl_execute(ft0);

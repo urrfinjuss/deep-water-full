@@ -36,7 +36,7 @@ void set_initial_data() {
   for (long int j = 0; j < state.number_modes; j++) {
     q = 2.L*PI*(j*overN - 0.5L) - conf.origin_offset;
     u = conf.image_offset + 2.L*atan2l(conf.scaling*sinl(0.5L*q),cosl(0.5L*q));
-    data[0][j] = 1.IL*cexpl(-1.IL*u) + 0.125IL*cexpl(-2.IL*u);
+    data[0][j] = -33.0IL/64.L + 1.IL*cexpl(-1.IL*u) + 0.125IL*cexpl(-2.IL*u);
     data[1][j] = 0.L;
   }
 }

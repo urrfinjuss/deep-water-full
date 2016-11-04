@@ -5,28 +5,25 @@ void compute_zero_mode(fftwl_complex *in, long double *out) {
   fftwl_complex 	w = cexpl(1.IL*conf.origin_offset);
   long double 		b = 0.5L*(1.L + powl(conf.scaling, 2))/conf.scaling;
   long double 		xi = (1.L - powl(conf.scaling, 2))/(1.L + powl(conf.scaling, 2));
-  long double S0 = 0.L;
+  long double 		S0 = 0.L;
 
   for (long int j = state.number_modes/2-1; j > 0; j--) {
-    S0 += -2.L*j*in[j]*conjl(in[j]);
+    S0 += -0.5L*j*in[j]*conjl(in[j]);
   }
   tmpc[2][0] = -0.5L*xi*conjl(w);
   for (long int j = 1; j < state.number_modes/2-1; j++) {
     tmpc[2][j] = tmpc[2][0]/(1.L - conjl(tmpc[2][0])*tmpc[2][j-1]); 
   }
-  tmpc[3][0] = in[1]/b - S0*conjl(tmpc[2][0]);
+  tmpc[3][0] = -0.5IL*in[1]/b - S0*conjl(tmpc[2][0]);
   for (long int j = 1; j < state.number_modes/2-1; j++) {
-    tmpc[3][j] = in[j+1]/b - conjl(tmpc[2][0])*tmpc[3][j-1];
+    tmpc[3][j] = -0.5IL*in[j+1]/b - conjl(tmpc[2][0])*tmpc[3][j-1];
     tmpc[3][j] = tmpc[3][j]/(1.L - conjl(tmpc[2][0])*tmpc[2][j-1]);
   } 
-  tmpc[1][state.number_modes/2-1] = tmpc[3][state.number_modes/2-2];
-  for (long int j = state.number_modes/2-2; j > 0; j--) {
+  tmpc[1][state.number_modes/2-2] = tmpc[3][state.number_modes/2-2];
+  for (long int j = state.number_modes/2-3; j > -1; j--) {
     tmpc[1][j] = tmpc[3][j]-tmpc[2][j]*tmpc[1][j+1];
   }
-  tmpc[1][0] = S0;
-  *out = b*creall(tmpc[1][1]*tmpc[2][0]+conjl(tmpc[1][1]*tmpc[2][0]) + S0);
-  printf("b * S0 = %.19LE\n", b*S0);
-  printf("Mapping correction = %.19LE\n", *out - b*S0);
+  *out = b*creall(tmpc[1][0]*tmpc[2][0]+conjl(tmpc[1][0]*tmpc[2][0]) + S0);
 }
 
 void div_jacobian(fftwl_complex *in, fftwl_complex *out) {
