@@ -43,7 +43,7 @@ extern fftwl_plan 	ft1, ift1;
 // memory.c
 extern void allocate_memory();
 extern void deallocate_memory();
-extern void backup_arrays();
+extern void remap(map_ptr new_map, unsigned long int N); 
 extern void init_memory();
 extern void fft_shift(fftwl_complex *in);
 

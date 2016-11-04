@@ -44,33 +44,16 @@ int main( int argc, char* argv[]) {
       printf("Unknown text format\n");
       exit(1);
   }
-
-
-  real_array_out("conf.dq.txt", conf.dq);
-  complex_array_out("zread.txt", data[0]);
-  complex_array_out("vread.txt", data[1]);
-  /*
-  fftwl_execute(ift0);
-  for (long int j = 0; j < state.number_modes/2; j++) {
-    tmpc[0][j] = -1.0IL*j*tmpc[0][j]/state.number_modes;
-    tmpc[0][state.number_modes-j-1] = 1.0IL*(j+1)*tmpc[0][state.number_modes-j-1];
-  }
-  complex_array_out("zq_direct.txt", tmpc[0]);
-  */
-  
   
   complex_array_out("zt-original.txt", data[0]);
   convertZtoQ(data[0], data[1]);
-  
-  //  Correct answer is here:
-  memcpy(tmpc[0], data[0], state.number_modes*sizeof(fftwl_complex));
-  // 
- 
-  complex_array_out("qread.txt", data[1]);
   convertQtoZ(data[1], data[0]);  
-  complex_array_out("zt-recovered.txt", data[0]);
 
-  backup_arrays();
-  printf("Complete\n");
+  map new_map;
+  new_map.scaling 	= 0.5;
+  new_map.image_offset 	= -1.2;
+  remap(&new_map, 256);
+ 
+  complex_array_out("zt-recovered.txt", data[0]);
   
 }
