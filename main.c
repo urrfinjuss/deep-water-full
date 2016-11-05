@@ -45,15 +45,19 @@ int main( int argc, char* argv[]) {
       exit(1);
   }
   
-  convertZtoQ(data[0], data[1]);
-  convertQtoZ(data[1], data[0]);  
+  complex_array_out("zt-original.txt", data[0]);
+  convertZtoQ(data[0], data[0]);
+  //convertQtoZ(data[1], data[0]);  
+  //complex_array_out("zt-recovered.txt", data[0]);
 
   map new_map;
-  new_map.scaling 	= 0.5;
-  new_map.image_offset 	= -1.2;
+  new_map.scaling 	= 0.25L;
+  new_map.image_offset 	= 1.00L;
 
   complex_array_out("zt-original.txt", data[0]);
-  remap(&new_map, 1024); 
+  remap(&new_map, 256); 
   complex_array_out("zt-recovered.txt", data[0]);
   
+  restore_potential(data[0], data[1], tmpc[3]);  
+  complex_array_out("Phi.ph.txt", tmpc[3]); 
 }

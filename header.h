@@ -57,12 +57,14 @@ extern void read_input(char *fname);
 extern void init_arrayf();
 extern void div_jacobian(fftwl_complex *in, fftwl_complex *out);
 extern void inverse(fftwl_complex *a, fftwl_complex *x);
+extern void linear_solve(fftwl_complex *a, fftwl_complex *b, fftwl_complex *x);
 extern void square_ft(fftwl_complex *Z, fftwl_complex *x);
-extern void compute_zero_mode(fftwl_complex *in, long double *out);
+extern void compute_zero_mode(fftwl_complex *in, long double S0, long double *out);
 
 // hlevel.c
 extern void convertZtoQ(fftwl_complex *in, fftwl_complex *out);
 extern void convertQtoZ(fftwl_complex *in, fftwl_complex *out);
+extern void restore_potential(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *out);
 
 // mapping.c
 extern void set_mapping();

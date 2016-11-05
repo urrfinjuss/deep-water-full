@@ -1,6 +1,6 @@
 #include "header.h"
 
-#define COMPLEX_ARRAYS 	4	
+#define COMPLEX_ARRAYS 	6	
 #define REAL_ARRAYS	2
 
 static const unsigned long int n_complex_arrays = COMPLEX_ARRAYS;
