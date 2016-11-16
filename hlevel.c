@@ -1,11 +1,13 @@
 #include "header.h"
 
+void compute_rhs(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *outQ, fftwl_complex *outV) {
+  long double overN = 1.L/state.number_modes;
 
-/*
-	V = i Psi_u / z_u   
-	V = i Psi_u * Q^2
-        Psi_u * Q^2 = -i V
-*/
+  
+
+}
+
+
 
 void restore_potential(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *out){
   long double overN = 1.L/state.number_modes;
@@ -21,7 +23,7 @@ void restore_potential(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *ou
   div_jacobian(tmpc[1], tmpc[0]);
   for (long int j = 1; j < state.number_modes/2; j++) {
     tmpc[1][j] = 0.5IL*tmpc[0][j]/j;      // stores phi_k, k = 1, ..., N/2
-    tmpc[0][j] =  0.5L*tmpc[0][j]/j;	// stores psi_k, k = 1, ..., N/2
+    tmpc[0][j] =  0.5L*tmpc[0][j]/j;	  // stores psi_k, k = 1, ..., N/2
   }
   memset(tmpc[0]+state.number_modes/2, 0, state.number_modes*sizeof(fftwl_complex)/2);
   memset(tmpc[1]+state.number_modes/2, 0, state.number_modes*sizeof(fftwl_complex)/2);
@@ -37,10 +39,8 @@ void restore_potential(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *ou
 }
 
 void convertQtoZ(fftwl_complex *in, fftwl_complex *out) {
-  // ----------------------------------------------------- //
   // computes Z from Q by series inversion of equation:	   //
   // 		   z_u Q^2 = 1				   //
-  // ----------------------------------------------------- //
   long double overN = 1.L/state.number_modes;
   long double y0 = 0.L, x0 = 0.L;
   long double S0 = 0.L;
@@ -73,13 +73,11 @@ void convertQtoZ(fftwl_complex *in, fftwl_complex *out) {
 }
 
 void convertZtoQ(fftwl_complex *in, fftwl_complex *out) {
-  // ----------------------------------------------------- //
   // computes Q from tilde-Z (z) by series inversion of:   //
   // 		   (z_q q_u + 1) Q^2 = 1		   //
   // 							   //
   // in		-- array with Z-tilde (z)		   //
   // out	-- array with Q				   //
-  // ----------------------------------------------------- //
   long double overN = 1.L/state.number_modes;
 
   memcpy(tmpc[0], in, state.number_modes*sizeof(fftwl_complex));
