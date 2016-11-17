@@ -62,6 +62,7 @@ extern void square_ft(fftwl_complex *Z, fftwl_complex *x);
 extern void compute_zero_mode(fftwl_complex *in, long double S0, long double *out);
 
 // hlevel.c
+extern void project(fftwl_complex *in, fftwl_complex *out);
 extern void convertZtoQ(fftwl_complex *in, fftwl_complex *out);
 extern void convertQtoZ(fftwl_complex *in, fftwl_complex *out);
 extern void restore_potential(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *out);

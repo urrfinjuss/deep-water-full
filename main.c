@@ -60,4 +60,10 @@ int main( int argc, char* argv[]) {
   
   restore_potential(data[0], data[1], tmpc[3]);  
   complex_array_out("Phi.ph.txt", tmpc[3]); 
+  for (long int j = 0; j < state.number_modes; j++) {
+    tmpc[3][j] = conjl(tmpc[3][j])*tmpc[3][j];
+  }
+  project(tmpc[3], tmpc[2]);
+  complex_array_out("Proj.absPhi2.ph.txt", tmpc[2]); 
+  
 }

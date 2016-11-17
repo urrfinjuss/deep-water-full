@@ -1,13 +1,30 @@
 #include "header.h"
 
-void compute_rhs(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *outQ, fftwl_complex *outV) {
+/*void compute_rhs(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *outQ, fftwl_complex *outV) {
   long double overN = 1.L/state.number_modes;
+}*/
 
-  
 
+void project(fftwl_complex *in, fftwl_complex *out) {
+  long double 		overN = 1.L/state.number_modes;
+  fftwl_complex 	b0 = 0.L;	
+
+  memcpy(tmpc[0], in, state.number_modes*sizeof(fftwl_complex));
+  fftwl_execute(ift0);
+  // first we need to compute the proper value of the constant:  
+  for (long int j = state.number_modes/2 - 2; j > -1; j--) {
+    b0 += 0.5L*(tmpc[0][state.number_modes-j-1]*conjl(conf.w[j]) - tmpc[0][j+1]*conf.w[j]);
+  }
+  memset(tmpc[0]+state.number_modes/2, 0, state.number_modes/2*sizeof(fftwl_complex));
+  for (long int j = 1; j < state.number_modes/2; j++) {
+    tmpc[0][j] = tmpc[0][j]*overN;
+  }
+  tmpc[0][0] = 0.5L*tmpc[0][0]*overN;
+  fftwl_execute(ft0);
+  for (long int j = 0; j < state.number_modes; j++) {
+    out[j] = tmpc[0][j] + b0;
+  }
 }
-
-
 
 void restore_potential(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *out){
   long double overN = 1.L/state.number_modes;

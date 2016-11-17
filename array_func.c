@@ -1,6 +1,5 @@
 #include "header.h"
 
-
 void compute_zero_mode(fftwl_complex *in, long double S0, long double *out) {
   fftwl_complex 	w = cexpl(1.IL*conf.origin_offset);
   long double 		b = 0.5L*(1.L + powl(conf.scaling, 2))/conf.scaling;
