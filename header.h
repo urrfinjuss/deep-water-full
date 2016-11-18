@@ -37,7 +37,7 @@ extern long double 	**tmpr;
 extern fftwl_complex 	**tmpc;
 extern fftwl_complex	**data;
 extern fftwl_plan 	ft0, ift0;
-extern fftwl_plan 	ft1, ift1;
+extern fftwl_plan 	ft1, ift1, ift2;
 
 // --------  Functions
 // memory.c

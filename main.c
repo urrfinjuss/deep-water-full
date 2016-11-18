@@ -49,6 +49,13 @@ int main( int argc, char* argv[]) {
   convertZtoQ(data[0], data[0]);
   //convertQtoZ(data[1], data[0]);  
   //complex_array_out("zt-recovered.txt", data[0]);
+  
+  complex_array_out("inQ.txt", data[0]);
+  complex_array_out("inV.txt", data[1]);
+  
+  //fftwl_complex 	kinetic_energy;
+  //compute_hamiltonian(data[0], data[1], &kinetic_energy);
+  restore_potential(data[0], data[1], tmpc[2]);
 
   map new_map;
   new_map.scaling 	= 0.25L;

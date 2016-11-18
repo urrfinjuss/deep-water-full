@@ -8,7 +8,7 @@ static const unsigned long int n_real_arrays = REAL_ARRAYS;
 static fftwl_complex	*aux_array;
 
 fftwl_plan	ft0, ift0;
-fftwl_plan	ft1, ift1;
+fftwl_plan	ft1, ift1, ift2;
 long double 	**tmpr;
 fftwl_complex 	**tmpc;
 fftwl_complex 	**data;
@@ -42,6 +42,7 @@ void allocate_memory() {
   ft1  = fftwl_plan_dft_1d(state.number_modes, tmpc[1], tmpc[1], FFTW_FORWARD, FMODE);
   ift0 = fftwl_plan_dft_1d(state.number_modes, tmpc[0], tmpc[0], FFTW_BACKWARD, FMODE);
   ift1 = fftwl_plan_dft_1d(state.number_modes, tmpc[1], tmpc[1], FFTW_BACKWARD, FMODE);
+  ift2 = fftwl_plan_dft_1d(state.number_modes, tmpc[2], tmpc[2], FFTW_BACKWARD, FMODE);
 }
 
 
@@ -54,6 +55,7 @@ void deallocate_memory() {
   fftwl_destroy_plan(ft1);
   fftwl_destroy_plan(ift0);
   fftwl_destroy_plan(ift1);
+  fftwl_destroy_plan(ift2);
 }
 
 void fft_shift(fftwl_complex *in){

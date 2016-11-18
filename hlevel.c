@@ -4,7 +4,6 @@
   long double overN = 1.L/state.number_modes;
 }*/
 
-
 void project(fftwl_complex *in, fftwl_complex *out) {
   long double 		overN = 1.L/state.number_modes;
   fftwl_complex 	b0 = 0.L;	
@@ -29,6 +28,8 @@ void project(fftwl_complex *in, fftwl_complex *out) {
 void restore_potential(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *out){
   long double overN = 1.L/state.number_modes;
   long double x0 = 0.L, y0 = 0.L;
+  long double K = 0.L;
+
   for (long int j = 0; j < state.number_modes; j++) {
     tmpc[0][j] = inQ[j]*inQ[j]*overN;
     tmpc[1][j] = -1.IL*inV[j]*overN;
@@ -50,7 +51,12 @@ void restore_potential(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *ou
   for (long int j = 1; j < state.number_modes/2; j++) {
     tmpc[0][j] = 2.L*tmpc[1][j];
   }
-  memset(tmpc[0]+state.number_modes/2, 0, state.number_modes*sizeof(fftwl_complex)/2);
+  memset(tmpc[0]+state.number_modes/2, 0, state.number_modes*sizeof(fftwl_complex)/2); // tmpc[0] has FT potential
+  for (long int j = state.number_modes/2-1; j > 0; j--) {
+    K += cimagl(tmpc[0][j]*conjl(1.IL*j*tmpc[0][j]));
+  }
+  K = -1.L*PI*K;  
+  printf("Kinetic Energy %.19LE\n", K);
   fftwl_execute(ft0);
   memcpy(out, tmpc[0], state.number_modes*sizeof(fftwl_complex));
 }
