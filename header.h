@@ -17,6 +17,8 @@ typedef struct input {
   long double gravity;			// free fall acceleration
   long double surface_tension;		// surface tension
   long double tolerance;		// tolerance for refinement
+  long double kineticE;			// kinetic energy
+  long double potentialE;		// potential energy
   unsigned long int refinement_counter;	// refinement counter
   unsigned long int number_poles;	// number of poles
   unsigned long int number_modes;	// number of grid points
