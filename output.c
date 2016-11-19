@@ -25,3 +25,24 @@ void complex_array_out(char *fname, fftwl_complex *in) {
   fclose(fh);
 }
 
+void print_constants() {
+  printf("#----------------------------------------------------------------------------#\n");
+  printf("#                                                                            #\n");
+  printf("#                               Conformal Map                                #\n");
+  printf("#                                Parameters:                                 #\n");
+  printf("#                                                                            #\n");
+  printf("#                         N  = %8ld                                      #\n", state.number_modes);
+  printf("#                         L  = %.17LE                       #\n", conf.scaling);
+  printf("#                         q* = %.17LE                       #\n", conf.origin_offset);
+  printf("#                         u* = %.17LE                       #\n", conf.image_offset);
+  printf("#                                                                            #\n");
+  printf("#                                                                            #\n");
+  printf("#                                 Constants:                                 #\n");
+  printf("#                                                                            #\n");
+  printf("#       Px = %.17LE\t  Py = %.17LE       #\n", cimagl(state.momentum), creall(state.momentum));
+  printf("#        K = %.17LE\t   P = %.17LE       #\n",state.kineticE, state.potentialE);
+  printf("#                                                                            #\n");
+  printf("#----------------------------------------------------------------------------#\n");
+}
+
+

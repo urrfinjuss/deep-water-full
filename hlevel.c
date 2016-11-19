@@ -29,13 +29,20 @@ void restore_potential(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *ou
   long double overN = 1.L/state.number_modes;
   long double x0 = 0.L, y0 = 0.L;
   long double K = 0.L;
+  fftwl_complex P = 0.L;
 
+  convertQtoZ(inQ, tmpc[5]); // tmpc[5] <- z-tilde
   for (long int j = 0; j < state.number_modes; j++) {
     tmpc[0][j] = inQ[j]*inQ[j]*overN;
     tmpc[1][j] = -1.IL*inV[j]*overN;
+    tmpc[2][j] = tmpc[5][j]*overN;
   }  
   fftwl_execute(ift0);
   fftwl_execute(ift1);
+  fftwl_execute(ift2);
+  memcpy(tmpc[5], tmpc[2], state.number_modes*sizeof(fftwl_complex)); 
+  //inverse(tmpc[0],tmpc[4]);
+  //div_jacobian(tmpc[4], tmpc[5]); // tmpc[5] stores z_q  
   linear_solve(tmpc[0], tmpc[1], tmpc[2]);
   memcpy(tmpc[1], tmpc[2], state.number_modes*sizeof(fftwl_complex));
   div_jacobian(tmpc[1], tmpc[0]);
@@ -54,9 +61,11 @@ void restore_potential(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *ou
   memset(tmpc[0]+state.number_modes/2, 0, state.number_modes*sizeof(fftwl_complex)/2); // tmpc[0] has FT potential
   for (long int j = state.number_modes/2-1; j > 0; j--) {
     K += cimagl(tmpc[0][j]*conjl(1.IL*j*tmpc[0][j]));
+    P += -0.5IL*j*tmpc[5][j]*conjl(tmpc[0][j]);
   }
   K = -1.L*PI*K;  
   state.kineticE = K;
+  state.momentum = P;
   //printf("Kinetic Energy\t\t%.19LE\n", K);
   fftwl_execute(ft0);
   memcpy(out, tmpc[0], state.number_modes*sizeof(fftwl_complex));
@@ -109,7 +118,7 @@ void convertQtoZ(fftwl_complex *in, fftwl_complex *out) {
     P += 2.L*creall((tmpc[4][j] + j*tmpc[2][j])*conjl(tmpc[1][j]));
   }
   P += creall(tmpc[4][0]*conjl(tmpc[1][0]));
-  state.potentialE = P;
+  state.potentialE = 2.L*PI*P;
   //printf("Potential Energy\t%.19LE\n", P0);
 }
 
