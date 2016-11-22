@@ -24,6 +24,9 @@ void remap(map_ptr new_map, unsigned long int N) {
   long double overN0 = 1.L/state.number_modes;
   long double overN = 1.L/N;
   unsigned long int N0 = state.number_modes;
+  unsigned int QC_Q_pass = 0;
+  unsigned int QC_V_pass = 0;
+  unsigned int QC_pass = 0;
 
   new_map->origin_offset = 2.0L*atan2l(new_map->scaling*s,c);
   memcpy(tmpc[0], data[0], N0*sizeof(fftwl_complex));
@@ -54,8 +57,6 @@ void remap(map_ptr new_map, unsigned long int N) {
     memcpy(tmpc[0], saveQ, state.number_modes*sizeof(fftwl_complex));
     memcpy(tmpc[1], saveV, state.number_modes*sizeof(fftwl_complex));
   }
-  fftwl_free(saveQ);
-  fftwl_free(saveV); 
   long double q, q_r, q0 = PI + conf.origin_offset;
   for (long int j = 0; j < state.number_modes; j++) {
     q   = new_map->scaling*tanl(1.L*PI*(j*overN - 0.5L) - 0.5L*new_map->origin_offset);
@@ -68,8 +69,46 @@ void remap(map_ptr new_map, unsigned long int N) {
   conf.scaling = new_map->scaling;
   conf.image_offset = new_map->image_offset;
   set_mapping();
+  
+  // verify that new map passes QC 
+  memcpy(tmpc[0], data[0], state.number_modes*sizeof(fftwl_complex));
+  memcpy(tmpc[1], data[1], state.number_modes*sizeof(fftwl_complex));
+  fftwl_execute(ift0);
+  fftwl_execute(ift1);
+  map_quality(tmpc[0], &QC_Q_pass);
+  map_quality(tmpc[1], &QC_V_pass);
+  complex_array_out("postref.Q.ft.txt", tmpc[0]);
+  complex_array_out("postref.V.ft.txt", tmpc[1]);
+  QC_pass = MIN(QC_Q_pass, QC_V_pass);
+  printf("Conformal map is %u\n", QC_pass);
+  if (QC_pass) {
+    fftwl_free(saveQ);
+    fftwl_free(saveV); 
+  } else {
+    printf("Bad Quality Map.\nPlaceholder\n");
+    exit(1);
+  }
+
 }
 
+void map_quality(fftwl_complex *in, unsigned int *QC_pass) {
+  long double full_sum 		= 0.0L;
+  long double partial_sum	= 0.0L;
+  long double qc_ratio		= 1.0L;
+
+  for (long int j = state.number_modes/2-1; j > -1; j--) {
+    full_sum += cabsl(in[j]);
+    if (j == state.number_modes*7/16) partial_sum = full_sum;
+  }
+  qc_ratio = partial_sum/sqrtl(1.L + powl(full_sum, 2));
+  printf("Full Sum    \t%.19LE\n", full_sum);
+  printf("Partial Sum \t%.19LE\n", partial_sum);
+  printf("Partial/Full\t%.19LE\n", qc_ratio);
+  if (qc_ratio < 1.0E-14L) {
+	printf("QC Pass\n");
+	*QC_pass = 1;
+  } else printf("QC Fail\n");
+}
 
 
 

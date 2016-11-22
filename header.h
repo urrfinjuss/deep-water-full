@@ -6,6 +6,8 @@
 #include <float.h>
 #include <fftw3.h>
 
+#define MIN(a,b) ((a) < (b) ? a : b)
+
 #define FMODE FFTW_MEASURE
 #define MOVE_MESH 1	// 0 if singularity tracking is off , 1 otherwise
 #define PI acosl(-1.0)
@@ -63,6 +65,7 @@ extern void inverse(fftwl_complex *a, fftwl_complex *x);
 extern void linear_solve(fftwl_complex *a, fftwl_complex *b, fftwl_complex *x);
 extern void square_ft(fftwl_complex *Z, fftwl_complex *x);
 extern void compute_zero_mode(fftwl_complex *in, long double S0, long double *out);
+extern void compute_zero_mode_complex(fftwl_complex *in, fftwl_complex S0, fftwl_complex *out);
 
 // hlevel.c
 extern void project(fftwl_complex *in, fftwl_complex *out);
@@ -72,6 +75,7 @@ extern void restore_potential(fftwl_complex *inQ, fftwl_complex *inV, fftwl_comp
 
 // mapping.c
 extern void set_mapping();
+extern void map_quality(fftwl_complex *in, unsigned int *QC_pass);
 
 // output.c
 extern void real_array_out(char* fname, long double *in);

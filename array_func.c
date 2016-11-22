@@ -20,6 +20,26 @@ void compute_zero_mode(fftwl_complex *in, long double S0, long double *out) {
   *out = b*creall(tmpc[4][0]*tmpc[2][0]+conjl(tmpc[4][0]*tmpc[2][0]) + S0);
 }
 
+void compute_zero_mode_complex(fftwl_complex *in, fftwl_complex S0, fftwl_complex *out) {
+  fftwl_complex 	w = cexpl(1.IL*conf.origin_offset);
+  long double 		b = 0.5L*(1.L + powl(conf.scaling, 2))/conf.scaling;
+  long double 		xi = (1.L - powl(conf.scaling, 2))/(1.L + powl(conf.scaling, 2));
+  tmpc[2][0] = -0.5L*xi*conjl(w);
+  for (long int j = 1; j < state.number_modes/2-1; j++) {
+    tmpc[2][j] = tmpc[2][0]/(1.L - conjl(tmpc[2][0])*tmpc[2][j-1]); 
+  }
+  tmpc[3][0] = in[1]/b - S0*conjl(tmpc[2][0]);
+  for (long int j = 1; j < state.number_modes/2-1; j++) {
+    tmpc[3][j] = in[j+1]/b - conjl(tmpc[2][0])*tmpc[3][j-1];
+    tmpc[3][j] = tmpc[3][j]/(1.L - conjl(tmpc[2][0])*tmpc[2][j-1]);
+  } 
+  tmpc[4][state.number_modes/2-2] = tmpc[3][state.number_modes/2-2];
+  for (long int j = state.number_modes/2-3; j > -1; j--) {
+    tmpc[4][j] = tmpc[3][j]-tmpc[2][j]*tmpc[4][j+1];
+  }
+  *out = b*(tmpc[4][0]*tmpc[2][0] + S0);
+}
+
 void div_jacobian(fftwl_complex *in, fftwl_complex *out) {
   // solve a tridiagonal system z_q q_u = b
   // b        -- inverse Fourier coefficients: b = Z_u - 1
