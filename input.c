@@ -33,7 +33,7 @@ void read_input(char *fname) {
 void set_initial_data() {
   long double overN = 1.L/state.number_modes;
   long double q, u;
-  long double fi = 0.5L*PI;
+  long double fi = 0.75L*PI;
   for (long int j = 0; j < state.number_modes; j++) {
     q = 2.L*PI*(j*overN - 0.5L) - conf.origin_offset;
     u = conf.image_offset - fi + 2.L*atan2l(conf.scaling*sinl(0.5L*q),cosl(0.5L*q));

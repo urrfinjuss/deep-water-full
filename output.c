@@ -26,23 +26,26 @@ void complex_array_out(char *fname, fftwl_complex *in) {
 }
 
 void print_constants() {
-  printf("#----------------------------------------------------------------------------#\n");
-  printf("#                                                                            #\n");
-  printf("#                               Conformal Map                                #\n");
-  printf("#                                Parameters:                                 #\n");
-  printf("#                                                                            #\n");
-  printf("#                         N  = %8ld                                      #\n", state.number_modes);
-  printf("#                         L  = %.17LE                       #\n", conf.scaling);
-  printf("#                         q* = %.17LE                       #\n", conf.origin_offset);
-  printf("#                         u* = %.17LE                       #\n", conf.image_offset);
-  printf("#                                                                            #\n");
-  printf("#                                                                            #\n");
-  printf("#                                 Constants:                                 #\n");
-  printf("#                                                                            #\n");
-  printf("#       Px = %.17LE\t  Py = %.17LE       #\n", cimagl(state.momentum), creall(state.momentum));
-  printf("#        K = %.17LE\t   P = %.17LE       #\n",state.kineticE/PI, state.potentialE/PI);
-  printf("#                                                                            #\n");
-  printf("#----------------------------------------------------------------------------#\n");
+  printf("#\t\t\t------------------------------------------------------\t\t\t#\n");
+  printf("#\t\t\t\t\t\t\t\t\t\t\t\t#\n");
+  printf("#\t\t\tConformal Map\t\t\t\t\t\t\t\t#\n");
+  printf("#\t\t\tParameters:\t\t\t\t\t\t\t\t#\n");
+  printf("#\t\t\t\t\t\t\t\t\t\t\t\t#\n");
+  printf("#\t\t\tFourier modes N:%8ld\t\t\t\t\t\t#\n", state.number_modes);
+  printf("#\t\t\tL-scaling:\t%.16LE\t\t\t\t\t#\n", conf.scaling);
+  printf("#\t\t\tQ-star:\t\t%18.16LE\t\t\t\t\t#\n", conf.origin_offset);
+  printf("#\t\t\tU-star:\t\t%18.16LE\t\t\t\t\t#\n", conf.image_offset);
+  printf("#\t\t\t\t\t\t\t\t\t\t\t\t#\n");
+  printf("#\t\t\t\t\t\t\t\t\t\t\t\t#\n");
+  printf("#\t\t\tConstants:\t\t\t\t\t\t\t\t#\n");
+  printf("#\t\t\t\t\t\t\t\t\t\t\t\t#\n");
+  printf("#\t\t\tMomentum X:\t\t%23.16LE\t\t\t\t#\n", cimagl(state.momentum));
+  printf("#\t\t\tMomentum Y:\t\t%23.16LE\t\t\t\t#\n", creall(state.momentum));
+  printf("#\t\t\tKinetic Energy:\t\t%23.16LE\t\t\t\t#\n",  state.kineticE/PI );
+  printf("#\t\t\tPotential Energy:\t%23.16LE\t\t\t\t#\n", state.potentialE/PI);
+  printf("#\t\t\t\t\t\t\t\t\t\t\t\t#\n");
+  printf("#\t\t\tMean Level:\t%23.16LE\t\t\t\t\t#\n", state.mean_level);
+  printf("#\t\t\t------------------------------------------------------\t\t\t#\n");
 }
 
 

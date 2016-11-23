@@ -76,7 +76,7 @@ void convertQtoZ(fftwl_complex *in, fftwl_complex *out) {
   // 		   z_u Q^2 = 1				   //
   long double overN = 1.L/state.number_modes;
   long double S0 = 0.L, T0 = 0.L;
-  long double P = 0.L;
+  long double P = 0.L, mean_level = 0.L;
   fftwl_complex z0 = 0.L;
 
   for (long int j = 0; j < state.number_modes; j++) {
@@ -108,13 +108,18 @@ void convertQtoZ(fftwl_complex *in, fftwl_complex *out) {
   memcpy(out, tmpc[0], state.number_modes*sizeof(fftwl_complex));
   for (long int j = 0; j < state.number_modes; j++) {
     tmpc[2][j] = cpowl(cimagl(tmpc[0][j]),2)*overN;
+    tmpc[0][j] = cimagl(tmpc[0][j])*overN;
   }
+  fftwl_execute(ift0);
   fftwl_execute(ift2);
   for (long int j = state.number_modes/2-1; j > 0; j--) {
+    mean_level += 2.0L*j*creall(tmpc[0][j]*conjl(tmpc[0][j]));
     P += 2.L*creall((tmpc[4][j] + j*tmpc[2][j])*conjl(tmpc[1][j]));
   }
+  mean_level = 2.L*PI*(S0 + mean_level);
   P += creall(tmpc[4][0]*conjl(tmpc[1][0]));
   state.potentialE = 2.L*PI*P;
+  state.mean_level = mean_level;
 }
 
 void convertZtoQ(fftwl_complex *in, fftwl_complex *out) {

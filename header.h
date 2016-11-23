@@ -19,6 +19,7 @@ typedef struct input {
   long double gravity;			// free fall acceleration
   long double surface_tension;		// surface tension
   long double tolerance;		// tolerance for refinement
+  long double mean_level;
   long double kineticE;			// kinetic energy
   long double potentialE;		// potential energy
   fftwl_complex momentum;		// momentum P = px + i*py
