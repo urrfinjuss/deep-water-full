@@ -8,7 +8,7 @@ void compute_zero_mode(fftwl_complex *in, long double S0, long double *out) {
   for (long int j = 1; j < state.number_modes/2-1; j++) {
     tmpc[2][j] = tmpc[2][0]/(1.L - conjl(tmpc[2][0])*tmpc[2][j-1]); 
   }
-  tmpc[3][0] = in[1]/b - S0*conjl(tmpc[2][0]);
+  tmpc[3][0] = in[1]/b - S0*conjl(tmpc[2][0]);  // added I 
   for (long int j = 1; j < state.number_modes/2-1; j++) {
     tmpc[3][j] = in[j+1]/b - conjl(tmpc[2][0])*tmpc[3][j-1];
     tmpc[3][j] = tmpc[3][j]/(1.L - conjl(tmpc[2][0])*tmpc[2][j-1]);
@@ -17,7 +17,7 @@ void compute_zero_mode(fftwl_complex *in, long double S0, long double *out) {
   for (long int j = state.number_modes/2-3; j > -1; j--) {
     tmpc[4][j] = tmpc[3][j]-tmpc[2][j]*tmpc[4][j+1];
   }
-  *out = b*creall(tmpc[4][0]*tmpc[2][0]+conjl(tmpc[4][0]*tmpc[2][0]) + S0);
+  *out = b*creall(2.0L*tmpc[4][0]*tmpc[2][0] + S0);
 }
 
 void compute_zero_mode_complex(fftwl_complex *in, fftwl_complex S0, fftwl_complex *out) {
@@ -28,7 +28,7 @@ void compute_zero_mode_complex(fftwl_complex *in, fftwl_complex S0, fftwl_comple
   for (long int j = 1; j < state.number_modes/2-1; j++) {
     tmpc[2][j] = tmpc[2][0]/(1.L - conjl(tmpc[2][0])*tmpc[2][j-1]); 
   }
-  tmpc[3][0] = in[1]/b - S0*conjl(tmpc[2][0]);
+  tmpc[3][0] = in[1]/b - 2.L*S0*conjl(tmpc[2][0]);
   for (long int j = 1; j < state.number_modes/2-1; j++) {
     tmpc[3][j] = in[j+1]/b - conjl(tmpc[2][0])*tmpc[3][j-1];
     tmpc[3][j] = tmpc[3][j]/(1.L - conjl(tmpc[2][0])*tmpc[2][j-1]);
@@ -37,7 +37,7 @@ void compute_zero_mode_complex(fftwl_complex *in, fftwl_complex S0, fftwl_comple
   for (long int j = state.number_modes/2-3; j > -1; j--) {
     tmpc[4][j] = tmpc[3][j]-tmpc[2][j]*tmpc[4][j+1];
   }
-  *out = b*(tmpc[4][0]*tmpc[2][0] + S0);
+  *out = b*(tmpc[4][0]*tmpc[2][0] + 1.L*S0);
 }
 
 void div_jacobian(fftwl_complex *in, fftwl_complex *out) {

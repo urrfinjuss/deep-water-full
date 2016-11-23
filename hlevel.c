@@ -75,10 +75,9 @@ void convertQtoZ(fftwl_complex *in, fftwl_complex *out) {
   // computes Z from Q by series inversion of equation:	   //
   // 		   z_u Q^2 = 1				   //
   long double overN = 1.L/state.number_modes;
-  long double y0 = 0.L, x0 = 0.L;
   long double S0 = 0.L;
   long double P = 0.L;
-  //fftwl_complex z0 = 0.L;
+  fftwl_complex z0 = 0.L;
 
   for (long int j = 0; j < state.number_modes; j++) {
     tmpc[0][j] = in[j]*in[j]*overN;
@@ -92,22 +91,13 @@ void convertQtoZ(fftwl_complex *in, fftwl_complex *out) {
   fftwl_execute(ift1);
   div_jacobian(tmpc[1], tmpc[0]);
   for (long int j = state.number_modes/2-1; j > 0; j--) {
-    tmpc[1][j] = 0.5IL*tmpc[0][j]/j;			// this stores x_k, k = 1, ..., N/2
-    //tmpc[5][j] = 1.IL*tmpc[0][j]/j;
-    tmpc[0][j] =  0.5L*tmpc[0][j]/j;			// this stores y_k, k = 1, ..., N/2
-    S0 += -2.0L*j*creall(tmpc[0][j]*conjl(tmpc[0][j])); 
+    tmpc[0][j] =  1.0IL*tmpc[0][j]/j;		// this stores z_k, k = 1, ..., N/2
+    S0 += -0.5L*j*creall(tmpc[0][j]*conjl(tmpc[0][j])); 
   }
-  //compute_zero_mode_complex(tmpc[5], 1.0IL*S0, &z0);
-  compute_zero_mode(tmpc[0], S0, &y0);  // this only takes care of y_0
-  compute_zero_mode(tmpc[1],  0, &x0);	// with transformation we also need to
-  tmpc[0][0] = x0 + 1.IL*y0;
-  //printf("Two Reals:\tX0 = %.19LE\tY0 = %.19LE\n", x0, y0);
-  //printf("One Complex:\tX0 = %.19LE\tY0 = %.19LE\n", creall(z0), cimagl(z0));
-  for (long int j = 1; j < state.number_modes/2; j++) {
-    tmpc[0][j] = 2.L*tmpc[1][j];
-  }
+  compute_zero_mode_complex(tmpc[0], 1.IL*S0, &z0);
+  tmpc[0][0] = z0;
   memset(tmpc[0]+state.number_modes/2, 0, state.number_modes/2*sizeof(fftwl_complex));
-  tmpc[1][0] = 1.0L*y0;
+  tmpc[1][0] = cimagl(z0);
   for (long int j = 1; j < state.number_modes/2; j++) {
     tmpc[1][j] = -0.5IL*tmpc[0][j];
     tmpc[1][state.number_modes-j] = conjl(tmpc[1][j]);
