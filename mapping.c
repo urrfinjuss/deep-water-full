@@ -92,12 +92,13 @@ void remap(map_ptr new_map, unsigned long int N) {
 }
 
 void map_quality(fftwl_complex *in, unsigned int *QC_pass) {
+  long double overN 		= 1.L/state.number_modes;
   long double full_sum 		= 0.0L;
   long double partial_sum	= 0.0L;
   long double qc_ratio		= 1.0L;
 
   for (long int j = state.number_modes/2-1; j > -1; j--) {
-    full_sum += cabsl(in[j]);
+    full_sum += cabsl(in[j])*overN;
     if (j == state.number_modes*7/16) partial_sum = full_sum;
   }
   qc_ratio = partial_sum/sqrtl(1.L + powl(full_sum, 2));
