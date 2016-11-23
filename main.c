@@ -59,7 +59,7 @@ int main( int argc, char* argv[]) {
   restore_potential(data[0], data[1], tmpc[2]);
   print_constants();
   //printf("Mapping 1: Kinetic Energy\t%.19LE\n", state.kineticE);
-  
+  exit(1);  
 
   map new_map;
   new_map.scaling 	= 0.25L;

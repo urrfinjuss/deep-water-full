@@ -40,7 +40,7 @@ void print_constants() {
   printf("#                                 Constants:                                 #\n");
   printf("#                                                                            #\n");
   printf("#       Px = %.17LE\t  Py = %.17LE       #\n", cimagl(state.momentum), creall(state.momentum));
-  printf("#        K = %.17LE\t   P = %.17LE       #\n",state.kineticE, state.potentialE);
+  printf("#        K = %.17LE\t   P = %.17LE       #\n",state.kineticE/PI, state.potentialE/PI);
   printf("#                                                                            #\n");
   printf("#----------------------------------------------------------------------------#\n");
 }
