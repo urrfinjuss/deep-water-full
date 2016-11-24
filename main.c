@@ -62,14 +62,22 @@ int main( int argc, char* argv[]) {
   //printf("Mapping 1: Kinetic Energy\t%.19LE\n", state.kineticE);
 
   map new_map;
-  new_map.scaling 	= 0.05L;
+  new_map.scaling 	= 0.025L;
   new_map.image_offset 	= 0.0L;
-
   //complex_array_out("zt-original.txt", data[0]);
-  remap(&new_map, 512); 
+  remap(&new_map, 2048);
   convertQtoZ(data[0], tmpc[5]);  
-  complex_array_out("zt-recovered.txt", tmpc[5]);
-  
+  complex_array_out("zt-recovered-1.txt", tmpc[5]);
+  restore_potential(data[0], data[1], tmpc[3]);  
+  print_constants(); 
+
+
+
+  new_map.scaling 	= 0.1L;
+  new_map.image_offset 	= 0.0L;
+  remap(&new_map, 2048); 
+  convertQtoZ(data[0], tmpc[5]);  
+  complex_array_out("zt-recovered-2.txt", tmpc[5]);
   restore_potential(data[0], data[1], tmpc[3]);  
   print_constants();
   //convertQtoZ(data[0], tmpc[5]);  

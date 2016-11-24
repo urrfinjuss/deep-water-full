@@ -28,6 +28,8 @@ void remap(map_ptr new_map, unsigned long int N) {
 
   map old_map;
   memcpy(&old_map, &conf, sizeof(map));
+  old_map.w = NULL;
+  old_map.dq = NULL;
   //printf("Old Map has N = %ld\n", N0);
   //printf("Old scaling %23.16LE\n", old_map.scaling);
 
@@ -84,7 +86,8 @@ void remap(map_ptr new_map, unsigned long int N) {
   conf.scaling = new_map->scaling;
   conf.image_offset = new_map->image_offset;
   set_mapping();
-  
+
+
   // verify that new map passes QC 
   memcpy(tmpc[0], data[0], state.number_modes*sizeof(fftwl_complex));
   memcpy(tmpc[1], data[1], state.number_modes*sizeof(fftwl_complex));
@@ -99,19 +102,16 @@ void remap(map_ptr new_map, unsigned long int N) {
   map_quality(tmpc[0], tmpc[1], &QC_pass);
   //complex_array_out("postref.Q.ft.txt", tmpc[0]);
   //complex_array_out("postref.V.ft.txt", tmpc[1]);
-  printf("Conformal map is %u\n", QC_pass);
   if (QC_pass) {
     printf("Good Quality New Map\nProceed with new map\n");
-    fftwl_free(saveQ);
-    fftwl_free(saveV); 
   } else {
     printf("Bad Quality New Map\nTry with different parameters\n");
     deallocate_memory();
     state.number_modes = N0;
+    memcpy(&conf, &old_map, sizeof(map));
     allocate_memory(); 
     memcpy(tmpc[0], saveQ, N0*sizeof(fftwl_complex));
     memcpy(tmpc[1], saveV, N0*sizeof(fftwl_complex));
-    memcpy(&conf, &old_map, sizeof(map));
     set_mapping();
     memset(tmpc[0] + N0/2, 0, N0/2*sizeof(fftwl_complex));
     memset(tmpc[1] + N0/2, 0, N0/2*sizeof(fftwl_complex));
@@ -124,7 +124,8 @@ void remap(map_ptr new_map, unsigned long int N) {
     memcpy(data[0], tmpc[0], N0*sizeof(fftwl_complex));
     memcpy(data[1], tmpc[1], N0*sizeof(fftwl_complex));
   }
-
+  fftwl_free(saveQ);
+  fftwl_free(saveV); 
 }
 
 void map_quality(fftwl_complex *in1, fftwl_complex *in2, unsigned int *QC_pass) {
