@@ -45,9 +45,10 @@ int main( int argc, char* argv[]) {
       exit(1);
   }
   
-  complex_array_out("zt-original.txt", data[0]);
+  //complex_array_out("zt-original.txt", data[0]);
   convertZtoQ(data[0], data[0]);
   convertQtoZ(data[0], tmpc[5]);  
+  complex_array_out("zt-original.txt", tmpc[5]);
   //printf("Mapping 1: Potential Energy\t%.19LE\n", state.potentialE);
   
   //complex_array_out("inQ.txt", data[0]);
@@ -61,8 +62,8 @@ int main( int argc, char* argv[]) {
   //printf("Mapping 1: Kinetic Energy\t%.19LE\n", state.kineticE);
 
   map new_map;
-  new_map.scaling 	= 0.5L;
-  new_map.image_offset 	= -1.25L;
+  new_map.scaling 	= 0.05L;
+  new_map.image_offset 	= 0.0L;
 
   //complex_array_out("zt-original.txt", data[0]);
   remap(&new_map, 512); 

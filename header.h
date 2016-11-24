@@ -76,7 +76,7 @@ extern void restore_potential(fftwl_complex *inQ, fftwl_complex *inV, fftwl_comp
 
 // mapping.c
 extern void set_mapping();
-extern void map_quality(fftwl_complex *in, unsigned int *QC_pass);
+extern void map_quality(fftwl_complex *in1, fftwl_complex *in2, unsigned int *QC_pass);
 
 // output.c
 extern void real_array_out(char* fname, long double *in);
