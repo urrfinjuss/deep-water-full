@@ -28,6 +28,12 @@ void remap(map_ptr new_map, unsigned long int N) {
   unsigned int QC_V_pass = 0;
   unsigned int QC_pass = 0;
 
+  map old_map;
+  memcpy(&old_map, &conf, sizeof(map));
+  printf("Old Map has N = %ld\n", N0);
+  printf("Old scaling %23.16LE\n", old_map.scaling);
+  
+
   new_map->origin_offset = 2.0L*atan2l(new_map->scaling*s,c);
   memcpy(tmpc[0], data[0], N0*sizeof(fftwl_complex));
   memcpy(tmpc[1], data[1], N0*sizeof(fftwl_complex));
@@ -37,6 +43,12 @@ void remap(map_ptr new_map, unsigned long int N) {
   saveV = fftwl_malloc(N0*sizeof(fftwl_complex));
   memcpy(saveQ, tmpc[0], N0*sizeof(fftwl_complex));
   memcpy(saveV, tmpc[1], N0*sizeof(fftwl_complex));
+  /*for (long int j = 0; j < state.number_modes/2; j++) {
+    tmpc[0][j] = tmpc[0][j]*overN0;
+    tmpc[1][j] = tmpc[1][j]*overN0;
+  }
+  complex_array_out("preref.Q.ft.txt", tmpc[0]);
+  complex_array_out("preref.V.ft.txt", tmpc[1]);*/
   deallocate_memory();
   state.number_modes = N;
   allocate_memory(); 
@@ -75,16 +87,23 @@ void remap(map_ptr new_map, unsigned long int N) {
   memcpy(tmpc[1], data[1], state.number_modes*sizeof(fftwl_complex));
   fftwl_execute(ift0);
   fftwl_execute(ift1);
+  for (long int j = 0; j < state.number_modes/2; j++) {
+    tmpc[0][j] = tmpc[0][j]*overN;
+    tmpc[1][j] = tmpc[1][j]*overN;
+  }
+  memset(tmpc[0]+state.number_modes/2, 0, state.number_modes/2*sizeof(fftwl_complex));
+  memset(tmpc[1]+state.number_modes/2, 0, state.number_modes/2*sizeof(fftwl_complex));
   map_quality(tmpc[0], &QC_Q_pass);
   map_quality(tmpc[1], &QC_V_pass);
-  complex_array_out("postref.Q.ft.txt", tmpc[0]);
-  complex_array_out("postref.V.ft.txt", tmpc[1]);
+  //complex_array_out("postref.Q.ft.txt", tmpc[0]);
+  //complex_array_out("postref.V.ft.txt", tmpc[1]);
   QC_pass = MIN(QC_Q_pass, QC_V_pass);
   printf("Conformal map is %u\n", QC_pass);
   if (QC_pass) {
     fftwl_free(saveQ);
     fftwl_free(saveV); 
   } else {
+    
     printf("Bad Quality Map.\nPlaceholder\n");
     exit(1);
   }
@@ -92,20 +111,19 @@ void remap(map_ptr new_map, unsigned long int N) {
 }
 
 void map_quality(fftwl_complex *in, unsigned int *QC_pass) {
-  long double overN 		= 1.L/state.number_modes;
   long double full_sum 		= 0.0L;
   long double partial_sum	= 0.0L;
   long double qc_ratio		= 1.0L;
 
   for (long int j = state.number_modes/2-1; j > -1; j--) {
-    full_sum += cabsl(in[j])*overN;
+    full_sum += cabsl(in[j]);
     if (j == state.number_modes*7/16) partial_sum = full_sum;
   }
   qc_ratio = partial_sum/sqrtl(1.L + powl(full_sum, 2));
   printf("Full Sum    \t%.19LE\n", full_sum);
   printf("Partial Sum \t%.19LE\n", partial_sum);
   printf("Partial/Full\t%.19LE\n", qc_ratio);
-  if (qc_ratio < 1.0E-14L) {
+  if (qc_ratio < 1.0E-15L) {
 	printf("QC Pass\n");
 	*QC_pass = 1;
   } else printf("QC Fail\n");

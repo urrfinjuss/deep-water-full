@@ -27,9 +27,8 @@ void project(fftwl_complex *in, fftwl_complex *out) {
 
 void restore_potential(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *out){
   long double overN = 1.L/state.number_modes;
-  long double x0 = 0.L, y0 = 0.L;
   long double K = 0.L;
-  fftwl_complex P = 0.L;
+  fftwl_complex P = 0.L, z0 = 0.L;
 
   convertQtoZ(inQ, tmpc[5]); // tmpc[5] <- z-tilde
   for (long int j = 0; j < state.number_modes; j++) {
@@ -41,24 +40,15 @@ void restore_potential(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *ou
   fftwl_execute(ift1);
   fftwl_execute(ift2);
   memcpy(tmpc[5], tmpc[2], state.number_modes*sizeof(fftwl_complex)); 
-  //inverse(tmpc[0],tmpc[4]);
-  //div_jacobian(tmpc[4], tmpc[5]); // tmpc[5] stores z_q  
   linear_solve(tmpc[0], tmpc[1], tmpc[2]);
   memcpy(tmpc[1], tmpc[2], state.number_modes*sizeof(fftwl_complex));
   div_jacobian(tmpc[1], tmpc[0]);
   for (long int j = 1; j < state.number_modes/2; j++) {
-    tmpc[1][j] = 0.5IL*tmpc[0][j]/j;      // stores phi_k, k = 1, ..., N/2
-    tmpc[0][j] =  0.5L*tmpc[0][j]/j;	  // stores psi_k, k = 1, ..., N/2
+    tmpc[0][j] = 1.0IL*tmpc[0][j]/j;
   }
   memset(tmpc[0]+state.number_modes/2, 0, state.number_modes*sizeof(fftwl_complex)/2);
-  memset(tmpc[1]+state.number_modes/2, 0, state.number_modes*sizeof(fftwl_complex)/2);
-  compute_zero_mode(tmpc[1], 0, &x0);
-  compute_zero_mode(tmpc[0], 0, &y0);
-  tmpc[0][0] = x0 + 1.IL*y0;  
-  for (long int j = 1; j < state.number_modes/2; j++) {
-    tmpc[0][j] = 2.L*tmpc[1][j];
-  }
-  memset(tmpc[0]+state.number_modes/2, 0, state.number_modes*sizeof(fftwl_complex)/2); // tmpc[0] has FT potential
+  compute_zero_mode_complex(tmpc[0], 0.L, &z0);
+  tmpc[0][0] = z0;
   for (long int j = state.number_modes/2-1; j > 0; j--) {
     K += cimagl(tmpc[0][j]*conjl(1.IL*j*tmpc[0][j]));
     P += -0.5IL*j*tmpc[5][j]*conjl(tmpc[0][j]);
@@ -66,7 +56,6 @@ void restore_potential(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *ou
   K = -1.L*PI*K;  
   state.kineticE = K;
   state.momentum = P;
-  //printf("Kinetic Energy\t\t%.19LE\n", K);
   fftwl_execute(ft0);
   memcpy(out, tmpc[0], state.number_modes*sizeof(fftwl_complex));
 }
