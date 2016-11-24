@@ -45,7 +45,7 @@ int main( int argc, char* argv[]) {
       exit(1);
   }
   
-  //complex_array_out("zt-original.txt", data[0]);
+  complex_array_out("zt-original.txt", data[0]);
   convertZtoQ(data[0], data[0]);
   convertQtoZ(data[0], tmpc[5]);  
   //printf("Mapping 1: Potential Energy\t%.19LE\n", state.potentialE);
@@ -66,7 +66,8 @@ int main( int argc, char* argv[]) {
 
   //complex_array_out("zt-original.txt", data[0]);
   remap(&new_map, 512); 
-  //complex_array_out("zt-recovered.txt", data[0]);
+  convertQtoZ(data[0], tmpc[5]);  
+  complex_array_out("zt-recovered.txt", tmpc[5]);
   
   restore_potential(data[0], data[1], tmpc[3]);  
   print_constants();

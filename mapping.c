@@ -28,11 +28,12 @@ void remap(map_ptr new_map, unsigned long int N) {
   unsigned int QC_V_pass = 0;
   unsigned int QC_pass = 0;
 
+  /*
   map old_map;
   memcpy(&old_map, &conf, sizeof(map));
   printf("Old Map has N = %ld\n", N0);
   printf("Old scaling %23.16LE\n", old_map.scaling);
-  
+  */
 
   new_map->origin_offset = 2.0L*atan2l(new_map->scaling*s,c);
   memcpy(tmpc[0], data[0], N0*sizeof(fftwl_complex));
@@ -69,14 +70,21 @@ void remap(map_ptr new_map, unsigned long int N) {
     memcpy(tmpc[0], saveQ, state.number_modes*sizeof(fftwl_complex));
     memcpy(tmpc[1], saveV, state.number_modes*sizeof(fftwl_complex));
   }
-  long double q, q_r, q0 = PI + conf.origin_offset;
+  long double 		q, q_r, q0 = PI + conf.origin_offset;
+  fftwl_complex 	w = 1.L;
   for (long int j = 0; j < state.number_modes; j++) {
     q   = new_map->scaling*tanl(1.L*PI*(j*overN - 0.5L) - 0.5L*new_map->origin_offset);
     q_r = q0 + 2.0L*atan2l(beta+q, conf.scaling*(1.0L - beta*q));
-    for (long int l = state.number_modes/2-1; l > -1; l--) {
-      data[0][j] += tmpc[0][l]*cexpl(-1.IL*l*q_r)*overN0; 
-      data[1][j] += tmpc[1][l]*cexpl(-1.IL*l*q_r)*overN0;
+    w = cexpl(-1.IL*q_r);
+    data[0][j] = tmpc[0][state.number_modes/2-1];
+    data[1][j] = tmpc[1][state.number_modes/2-1];
+    for (long int l = state.number_modes/2-1; l > 0; l--) {
+      data[0][j] = data[0][j]*w + tmpc[0][l-1];
+      data[1][j] = data[1][j]*w + tmpc[1][l-1];
+
     } 
+    data[0][j] = data[0][j]*overN0;
+    data[1][j] = data[1][j]*overN0;
   }
   conf.scaling = new_map->scaling;
   conf.image_offset = new_map->image_offset;
