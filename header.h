@@ -42,8 +42,8 @@ extern map conf;
 extern long double 	**tmpr;
 extern fftwl_complex 	**tmpc;
 extern fftwl_complex	**data;
-extern fftwl_plan 	ft0, ift0;
-extern fftwl_plan 	ft1, ift1, ift2;
+extern fftwl_plan 	ft0, ft1, ft2, ft3, ft4;
+extern fftwl_plan 	ift0, ift1, ift2, ift3, ift4;
 
 // --------  Functions
 // memory.c
@@ -83,7 +83,9 @@ extern void real_array_out(char* fname, long double *in);
 extern void complex_array_out(char *fname, fftwl_complex *in);
 extern void print_constants();
 
+// pade.c
+extern void set_Q0(unsigned long d);
 
-
-
+// evolve.c
+extern void compute_rhs(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *outQ, fftwl_complex *outV);
 

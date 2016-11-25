@@ -22,7 +22,8 @@ void project(fftwl_complex *in, fftwl_complex *out) {
   fftwl_execute(ft0);
   for (long int j = 0; j < state.number_modes; j++) {
     out[j] = tmpc[0][j] + b0;
-  }
+  } 
+  //printf("shift_re = %.16LE\nshift_im = %.16LE\n", creall(b0), cimagl(b0));
 }
 
 void restore_potential(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *out){

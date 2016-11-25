@@ -33,12 +33,13 @@ void read_input(char *fname) {
 void set_initial_data() {
   long double overN = 1.L/state.number_modes;
   long double q, u;
-  long double fi = 0.0L*PI;
+  long double fi = 0.25L*PI;
   for (long int j = 0; j < state.number_modes; j++) {
     q = 2.L*PI*(j*overN - 0.5L) - conf.origin_offset;
     u = conf.image_offset - fi + 2.L*atan2l(conf.scaling*sinl(0.5L*q),cosl(0.5L*q));
-    //data[0][j] = -sinl(fi)+0.125L*sinl(2.L*fi)-33.0IL/64.L + 1.IL*cexpl(-1.IL*u) + 0.125IL*cexpl(-2.IL*u); // easy Z-tilde
-    data[0][j] = -1.IL*cpowl(0.01L*(1.L/ctanl(0.5L*(u-0.1IL)) - 1.IL),2);
+    data[0][j] = -sinl(fi)+0.125L*sinl(2.L*fi)-33.0IL/64.L + 1.IL*cexpl(-1.IL*u) + 0.125IL*cexpl(-2.IL*u); // easy Z-tilde
+    //data[0][j] = -1.IL*cpowl(0.01L*(1.L/ctanl(0.5L*(u-0.1IL)) - 1.IL),2);
+    data[0][j] = 1.L + 0.5L*cexpl(-1.IL*u); // set Q directly
     data[1][j] = 1.L*cexpl(-1.IL*u); 
   }
 }

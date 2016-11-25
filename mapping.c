@@ -30,8 +30,6 @@ void remap(map_ptr new_map, unsigned long int N) {
   memcpy(&old_map, &conf, sizeof(map));
   old_map.w = NULL;
   old_map.dq = NULL;
-  //printf("Old Map has N = %ld\n", N0);
-  //printf("Old scaling %23.16LE\n", old_map.scaling);
 
   new_map->origin_offset = 2.0L*atan2l(new_map->scaling*s,c);
   memcpy(tmpc[0], data[0], N0*sizeof(fftwl_complex));

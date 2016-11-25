@@ -46,7 +46,7 @@ int main( int argc, char* argv[]) {
   }
   
   //complex_array_out("zt-original.txt", data[0]);
-  convertZtoQ(data[0], data[0]);
+  //convertZtoQ(data[0], data[0]);
   convertQtoZ(data[0], tmpc[5]);  
   complex_array_out("zt-original.txt", tmpc[5]);
   //printf("Mapping 1: Potential Energy\t%.19LE\n", state.potentialE);
@@ -73,8 +73,8 @@ int main( int argc, char* argv[]) {
 
 
 
-  new_map.scaling 	= 0.1L;
-  new_map.image_offset 	= 0.0L;
+  new_map.scaling 	= 0.2L;
+  new_map.image_offset 	= 0.8L;
   remap(&new_map, 2048); 
   convertQtoZ(data[0], tmpc[5]);  
   complex_array_out("zt-recovered-2.txt", tmpc[5]);
@@ -85,11 +85,15 @@ int main( int argc, char* argv[]) {
   //printf("Mapping 2: Potential Energy\t%.19LE\n", state.potentialE);
   //printf("Mapping 2: Kinetic Energy\t%.19LE\n", state.kineticE);
 
-  complex_array_out("post.Phi.ph.txt", tmpc[3]); 
-  for (long int j = 0; j < state.number_modes; j++) {
-    tmpc[3][j] = conjl(tmpc[3][j])*tmpc[3][j];
-  }
-  project(tmpc[3], tmpc[2]);
-  //complex_array_out("Proj.absPhi2.ph.txt", tmpc[2]); 
+
+  compute_rhs(data[0], data[1], tmpc[2], tmpc[3]);
   
+
+  //complex_array_out("post.Phi.ph.txt", tmpc[3]); 
+  //for (long int j = 0; j < state.number_modes; j++) {
+  //  tmpc[3][j] = conjl(tmpc[3][j])*tmpc[3][j];
+  //}
+  //project(tmpc[3], tmpc[2]);
+  //complex_array_out("Proj.absPhi2.ph.txt", tmpc[2]); 
+  //set_Q0(4);  
 }

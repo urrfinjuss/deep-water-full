@@ -7,8 +7,8 @@ static const unsigned long int n_complex_arrays = COMPLEX_ARRAYS;
 static const unsigned long int n_real_arrays = REAL_ARRAYS;
 static fftwl_complex	*aux_array;
 
-fftwl_plan	ft0, ift0;
-fftwl_plan	ft1, ift1, ift2;
+fftwl_plan	ft0, ft1, ft2, ft3, ft4;
+fftwl_plan	ift0, ift1, ift2, ift3, ift4;
 long double 	**tmpr;
 fftwl_complex 	**tmpc;
 fftwl_complex 	**data;
@@ -40,9 +40,14 @@ void allocate_memory() {
 
   ft0  = fftwl_plan_dft_1d(state.number_modes, tmpc[0], tmpc[0], FFTW_FORWARD, FMODE);
   ft1  = fftwl_plan_dft_1d(state.number_modes, tmpc[1], tmpc[1], FFTW_FORWARD, FMODE);
+  ft2  = fftwl_plan_dft_1d(state.number_modes, tmpc[2], tmpc[2], FFTW_FORWARD, FMODE);
+  ft3  = fftwl_plan_dft_1d(state.number_modes, tmpc[3], tmpc[3], FFTW_FORWARD, FMODE);
+  ft4  = fftwl_plan_dft_1d(state.number_modes, tmpc[4], tmpc[4], FFTW_FORWARD, FMODE);
   ift0 = fftwl_plan_dft_1d(state.number_modes, tmpc[0], tmpc[0], FFTW_BACKWARD, FMODE);
   ift1 = fftwl_plan_dft_1d(state.number_modes, tmpc[1], tmpc[1], FFTW_BACKWARD, FMODE);
   ift2 = fftwl_plan_dft_1d(state.number_modes, tmpc[2], tmpc[2], FFTW_BACKWARD, FMODE);
+  ift3 = fftwl_plan_dft_1d(state.number_modes, tmpc[3], tmpc[3], FFTW_BACKWARD, FMODE);
+  ift4 = fftwl_plan_dft_1d(state.number_modes, tmpc[4], tmpc[4], FFTW_BACKWARD, FMODE);
 }
 
 
@@ -53,9 +58,14 @@ void deallocate_memory() {
   fftwl_free(aux_array); fftwl_free(data[0]);  fftwl_free(data[1]);
   fftwl_destroy_plan(ft0);
   fftwl_destroy_plan(ft1);
+  fftwl_destroy_plan(ft2);
+  fftwl_destroy_plan(ft3);
+  fftwl_destroy_plan(ft4);
   fftwl_destroy_plan(ift0);
   fftwl_destroy_plan(ift1);
   fftwl_destroy_plan(ift2);
+  fftwl_destroy_plan(ift3);
+  fftwl_destroy_plan(ift4);
 }
 
 void fft_shift(fftwl_complex *in){
