@@ -80,13 +80,21 @@ int main( int argc, char* argv[]) {
   complex_array_out("zt-recovered-2.txt", tmpc[5]);
   restore_potential(data[0], data[1], tmpc[3]);  
   print_constants();
+
+  rk6_step(data[0], data[1], 0.05);
+  convertQtoZ(data[0], tmpc[5]);  
+  complex_array_out("zt-after-step.txt", tmpc[5]);
+  restore_potential(data[0], data[1], tmpc[3]);  
+  print_constants();
   //convertQtoZ(data[0], tmpc[5]);  
   //complex_array_out("zt-recovered.txt", tmpc[5]);
   //printf("Mapping 2: Potential Energy\t%.19LE\n", state.potentialE);
   //printf("Mapping 2: Kinetic Energy\t%.19LE\n", state.kineticE);
 
+    
 
-  compute_rhs(data[0], data[1], tmpc[2], tmpc[3]);
+
+  //compute_rhs(data[0], data[1], tmpc[2], tmpc[3]);
   
 
   //complex_array_out("post.Phi.ph.txt", tmpc[3]); 

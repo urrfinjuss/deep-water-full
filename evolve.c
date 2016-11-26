@@ -1,5 +1,38 @@
 #include "header.h"
 
+
+static fftwl_complex 	**kq, *tQ;
+static fftwl_complex 	**kv, *tV;
+
+static const long double 	one_third        = 1.0L/3.0L;
+static const long double 	two_thirds       = 2.0L/3.0L;
+static const long double 	one_twelfth      = 1.0L/12.0L;
+static const long double 	one_eighth       = 1.0L/8.0L;
+static const long double 	one_sixteenth 	 = 1.0L/16.0L;
+static const long double 	one_fortyfourths = 1.0L/44.0L;
+static const long double 	one_onetwentieth = 1.0L/120.0L;
+
+void allocate_timemarching() {
+  unsigned long 	N = state.number_modes;
+  kq = fftwl_malloc(7*sizeof(fftwl_complex *));
+  kv = fftwl_malloc(7*sizeof(fftwl_complex *));
+  for (long int j = 0; j < 7; j++) {
+    kq[j] = fftwl_malloc(N*sizeof(fftwl_complex));
+    kv[j] = fftwl_malloc(N*sizeof(fftwl_complex));
+  }
+  tQ = fftwl_malloc(N*sizeof(fftwl_complex));
+  tV = fftwl_malloc(N*sizeof(fftwl_complex));
+}
+
+void deallocate_timemarching() {
+  for (long int j = 0; j < 7; j++) {
+    fftwl_free(kq[j]);
+    fftwl_free(kv[j]);
+  }
+  fftwl_free(tQ);
+  fftwl_free(tV);
+}
+
 void compute_rhs(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *outQ, fftwl_complex *outV) {
   unsigned long 	N = state.number_modes;
   long double 		overN = 1.L/N;
@@ -10,8 +43,8 @@ void compute_rhs(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *outQ, ff
   fftwl_complex 	b1U = 0.L, b2U = 0.L;
   //fftwl_complex 	b1B = 0.L, b2B = 0.L;
 
-  complex_array_out("Q.ph.txt", data[0]);
-  complex_array_out("V.ph.txt", data[1]);
+  //complex_array_out("Q.ph.txt", data[0]);
+  //complex_array_out("V.ph.txt", data[1]);
   memcpy(tmpc[0], inQ, N*sizeof(fftwl_complex));
   memcpy(tmpc[1], inV, N*sizeof(fftwl_complex));
   fftwl_execute(ift0); 
@@ -72,3 +105,54 @@ void compute_rhs(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *outQ, ff
     outV[j] = g*(inQ[j]*inQ[j]-1.L)+1.IL*conf.dq[j]*(tmpc[2][j]*tmpc[1][j]-inQ[j]*inQ[j]*tmpc[3][j]);
   }
 }
+
+
+void rk6_step(fftwl_complex *inQ, fftwl_complex *inV, long double dt) {
+  unsigned long 	N = state.number_modes;
+
+  memcpy(tQ, inQ, N*sizeof(fftwl_complex)); 
+  memcpy(tV, inV, N*sizeof(fftwl_complex)); 
+
+  compute_rhs(tQ, tV, kq[0], kv[0]);
+  for (long int j = 0; j < N; j++) {
+    tQ[j] = inQ[j] + one_third*dt*kq[0][j];
+    tV[j] = inV[j] + one_third*dt*kv[0][j];
+  }
+  compute_rhs(tQ, tV, kq[1], kv[1]);
+  for (long int j = 0; j < N; j++) {
+    tQ[j] = inQ[j] + two_thirds*dt*kq[1][j];
+    tV[j] = inV[j] + two_thirds*dt*kv[1][j];
+  }
+  compute_rhs(tQ, tV, kq[2], kv[2]);
+  for (long int j = 0; j < N; j++) {
+    tQ[j] = inQ[j] + one_twelfth*dt*(kq[0][j] + 4.0L*kq[1][j] - kq[2][j]);
+    tV[j] = inV[j] + one_twelfth*dt*(kv[0][j] + 4.0L*kv[1][j] - kv[2][j]);
+  }
+  compute_rhs(tQ, tV, kq[3], kv[3]);
+  for (long int j = 0; j < N; j++) {
+    tQ[j] = inQ[j] + one_sixteenth*dt*(-kq[0][j] + 18.0L*kq[1][j] - 3.0L*kq[2][j] - 6.0L*kq[3][j]);
+    tV[j] = inV[j] + one_sixteenth*dt*(-kv[0][j] + 18.0L*kv[1][j] - 3.0L*kv[2][j] - 6.0L*kv[3][j]);
+  }
+  compute_rhs(tQ, tV, kq[4], kv[4]);
+  for (long int j = 0; j < N; j++) {
+    tQ[j] = inQ[j] + one_eighth*dt*(9.0L*kq[1][j] - 3.0L*kq[2][j] - 6.0L*kq[3][j] + 4.0L*kq[4][j]);
+    tV[j] = inV[j] + one_eighth*dt*(9.0L*kv[1][j] - 3.0L*kv[2][j] - 6.0L*kv[3][j] + 4.0L*kv[4][j]);
+  }
+  compute_rhs(tQ, tV, kq[5], kv[5]);
+  for (long int j = 0; j < N; j++) {
+    tQ[j] = inQ[j] + one_fortyfourths*dt*(9.0L*kq[0][j] - 36.0L*kq[1][j] + 63.0L*kq[2][j] + 72.0L*kq[3][j] - 64.0L*kq[4][j]);
+    tV[j] = inV[j] + one_fortyfourths*dt*(9.0L*kv[0][j] - 36.0L*kv[1][j] + 63.0L*kv[2][j] + 72.0L*kv[3][j] - 64.0L*kv[4][j]);
+  }
+  compute_rhs(tQ, tV, kq[6], kv[6]);
+  for (long int j = 0; j < N; j++) {
+    inQ[j] += one_onetwentieth*dt*(11.0L*kq[0][j] + 81.0L*kq[2][j] + 81.0L*kq[3][j] - 32.0L*kq[4][j] - 32.0L*kq[5][j] + 11.0L*kq[6][j]);
+    inV[j] += one_onetwentieth*dt*(11.0L*kv[0][j] + 81.0L*kv[2][j] + 81.0L*kv[3][j] - 32.0L*kv[4][j] - 32.0L*kv[5][j] + 11.0L*kv[6][j]);
+  }
+
+
+
+
+
+
+}
+

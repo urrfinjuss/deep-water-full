@@ -88,4 +88,7 @@ extern void set_Q0(unsigned long d);
 
 // evolve.c
 extern void compute_rhs(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *outQ, fftwl_complex *outV);
+extern void allocate_timemarching();
+extern void deallocate_timemarching();
+extern void rk6_step(fftwl_complex *inQ, fftwl_complex *inV, long double dt);
 

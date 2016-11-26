@@ -37,6 +37,7 @@ void allocate_memory() {
   data[1] = fftwl_malloc(state.number_modes*sizeof(fftwl_complex));
   memset(data[0], 0, state.number_modes*sizeof(fftwl_complex));
   memset(data[1], 0, state.number_modes*sizeof(fftwl_complex));
+  allocate_timemarching();
 
   ft0  = fftwl_plan_dft_1d(state.number_modes, tmpc[0], tmpc[0], FFTW_FORWARD, FMODE);
   ft1  = fftwl_plan_dft_1d(state.number_modes, tmpc[1], tmpc[1], FFTW_FORWARD, FMODE);
@@ -56,6 +57,7 @@ void deallocate_memory() {
   for (long int j = 0; j < n_real_arrays; j++) fftwl_free(tmpr[j]);	 
   fftwl_free(conf.dq);   fftwl_free(conf.w); 
   fftwl_free(aux_array); fftwl_free(data[0]);  fftwl_free(data[1]);
+  deallocate_timemarching();
   fftwl_destroy_plan(ft0);
   fftwl_destroy_plan(ft1);
   fftwl_destroy_plan(ft2);
