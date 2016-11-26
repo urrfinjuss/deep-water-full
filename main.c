@@ -46,7 +46,7 @@ int main( int argc, char* argv[]) {
   }
   
   //complex_array_out("zt-original.txt", data[0]);
-  //convertZtoQ(data[0], data[0]);
+  convertZtoQ(data[0], data[0]);
   convertQtoZ(data[0], tmpc[5]);  
   complex_array_out("zt-original.txt", tmpc[5]);
   //printf("Mapping 1: Potential Energy\t%.19LE\n", state.potentialE);
@@ -58,34 +58,34 @@ int main( int argc, char* argv[]) {
   //compute_hamiltonian(data[0], data[1], &kinetic_energy);
   restore_potential(data[0], data[1], tmpc[2]);
   complex_array_out("pre.Phi.ph.txt", tmpc[2]); 
-  print_constants();
+  //print_constants();
   //printf("Mapping 1: Kinetic Energy\t%.19LE\n", state.kineticE);
 
-  map new_map;
-  new_map.scaling 	= 0.025L;
-  new_map.image_offset 	= 0.0L;
+  //map new_map;
+  //new_map.scaling 	= 0.025L;
+  //new_map.image_offset 	= 0.0L;
   //complex_array_out("zt-original.txt", data[0]);
-  remap(&new_map, 2048);
-  convertQtoZ(data[0], tmpc[5]);  
-  complex_array_out("zt-recovered-1.txt", tmpc[5]);
-  restore_potential(data[0], data[1], tmpc[3]);  
-  print_constants(); 
+  //remap(&new_map, 2048);
+  //convertQtoZ(data[0], tmpc[5]);  
+  //complex_array_out("zt-recovered-1.txt", tmpc[5]);
+  //restore_potential(data[0], data[1], tmpc[3]);  
+  //print_constants(); 
 
 
 
-  new_map.scaling 	= 0.2L;
-  new_map.image_offset 	= 0.8L;
-  remap(&new_map, 2048); 
-  convertQtoZ(data[0], tmpc[5]);  
-  complex_array_out("zt-recovered-2.txt", tmpc[5]);
-  restore_potential(data[0], data[1], tmpc[3]);  
+  //new_map.scaling 	= 0.2L;
+  //new_map.image_offset 	= 0.8L;
+  //remap(&new_map, 2048); 
+  //convertQtoZ(data[0], tmpc[5]);  
+  //complex_array_out("zt-recovered-2.txt", tmpc[5]);
+  //restore_potential(data[0], data[1], tmpc[3]);  
   print_constants();
 
-  rk6_step(data[0], data[1], 0.05);
-  convertQtoZ(data[0], tmpc[5]);  
-  complex_array_out("zt-after-step.txt", tmpc[5]);
-  restore_potential(data[0], data[1], tmpc[3]);  
-  print_constants();
+  //rk6_step(data[0], data[1], 0.05);
+  //convertQtoZ(data[0], tmpc[5]);  
+  //complex_array_out("zt-after-step.txt", tmpc[5]);
+  //restore_potential(data[0], data[1], tmpc[3]);  
+  //print_constants();
   //convertQtoZ(data[0], tmpc[5]);  
   //complex_array_out("zt-recovered.txt", tmpc[5]);
   //printf("Mapping 2: Potential Energy\t%.19LE\n", state.potentialE);
@@ -104,4 +104,6 @@ int main( int argc, char* argv[]) {
   //project(tmpc[3], tmpc[2]);
   //complex_array_out("Proj.absPhi2.ph.txt", tmpc[2]); 
   //set_Q0(4);  
+  evolve_rk6(data[0], data[1]);
+
 }

@@ -4,6 +4,7 @@
 static fftwl_complex 	**kq, *tQ;
 static fftwl_complex 	**kv, *tV;
 
+static const long double	cfl		 = 0.5L;
 static const long double 	one_third        = 1.0L/3.0L;
 static const long double 	two_thirds       = 2.0L/3.0L;
 static const long double 	one_twelfth      = 1.0L/12.0L;
@@ -43,8 +44,10 @@ void compute_rhs(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *outQ, ff
   fftwl_complex 	b1U = 0.L, b2U = 0.L;
   //fftwl_complex 	b1B = 0.L, b2B = 0.L;
 
-  //complex_array_out("Q.ph.txt", data[0]);
-  //complex_array_out("V.ph.txt", data[1]);
+  if (conf.scaling == 1.0L) {
+	w2 = 0.L;
+	w1 = 0.L;
+  }
   memcpy(tmpc[0], inQ, N*sizeof(fftwl_complex));
   memcpy(tmpc[1], inV, N*sizeof(fftwl_complex));
   fftwl_execute(ift0); 
@@ -109,6 +112,7 @@ void compute_rhs(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *outQ, ff
 
 void rk6_step(fftwl_complex *inQ, fftwl_complex *inV, long double dt) {
   unsigned long 	N = state.number_modes;
+  long double		overN = 1.L/N;
 
   memcpy(tQ, inQ, N*sizeof(fftwl_complex)); 
   memcpy(tV, inV, N*sizeof(fftwl_complex)); 
@@ -145,14 +149,71 @@ void rk6_step(fftwl_complex *inQ, fftwl_complex *inV, long double dt) {
   }
   compute_rhs(tQ, tV, kq[6], kv[6]);
   for (long int j = 0; j < N; j++) {
-    inQ[j] += one_onetwentieth*dt*(11.0L*kq[0][j] + 81.0L*kq[2][j] + 81.0L*kq[3][j] - 32.0L*kq[4][j] - 32.0L*kq[5][j] + 11.0L*kq[6][j]);
-    inV[j] += one_onetwentieth*dt*(11.0L*kv[0][j] + 81.0L*kv[2][j] + 81.0L*kv[3][j] - 32.0L*kv[4][j] - 32.0L*kv[5][j] + 11.0L*kv[6][j]);
+    inQ[j] = (inQ[j] + one_onetwentieth*dt*(11.0L*kq[0][j] + 81.0L*kq[2][j] + 81.0L*kq[3][j] - 32.0L*kq[4][j] - 32.0L*kq[5][j] + 11.0L*kq[6][j]))*overN;
+    inV[j] = (inV[j] + one_onetwentieth*dt*(11.0L*kv[0][j] + 81.0L*kv[2][j] + 81.0L*kv[3][j] - 32.0L*kv[4][j] - 32.0L*kv[5][j] + 11.0L*kv[6][j]))*overN;
   }
+  memcpy(tmpc[0], inQ, N*sizeof(fftwl_complex));
+  memcpy(tmpc[1], inV, N*sizeof(fftwl_complex));
+  fftwl_execute(ift0);
+  fftwl_execute(ift1);
+  memset(tmpc[0]+N/2, 0, N/2*sizeof(fftwl_complex));
+  memset(tmpc[1]+N/2, 0, N/2*sizeof(fftwl_complex));
+  fftwl_execute(ft0);
+  fftwl_execute(ft1); 
+  memcpy(inQ, tmpc[0], N*sizeof(fftwl_complex));
+  memcpy(inV, tmpc[1], N*sizeof(fftwl_complex));
+}
 
+void evolve_rk6(fftwl_complex *inQ, fftwl_complex *inV) {
+  char 		filename1[80];
+  char 		filename2[80];
+  long double 	T  = state.final_time;
+  long double   dt = cfl*2.L*PI*conf.scaling/state.number_modes;
+  long int 	nsteps = lroundl(1.L*T/dt) + 1;
+  long int 	counter = 0;
+  long double   a_dt = T/nsteps;
+  long double   time = 0.L;
+  unsigned int	QC_pass = 1;
 
+  memcpy(tmpc[0], inQ, state.number_modes*sizeof(fftwl_complex));
+  memcpy(tmpc[1], inV, state.number_modes*sizeof(fftwl_complex));
+  fftwl_execute(ift0); 
+  fftwl_execute(ift1); 
+  map_quality(tmpc[0], tmpc[1], &QC_pass);
+  if (!QC_pass) {
+    printf("Bad Quality Map.\tTime = %.9LE\nStop!\n", time);
+    exit(1);
+  }
+  for (long int j = 0; j < nsteps + 1; j++) {
+    rk6_step(inQ, inV, a_dt);  
+    time = (j+1)*a_dt;
 
+    //   Quality Control
+    memcpy(tmpc[0], inQ, state.number_modes*sizeof(fftwl_complex));
+    memcpy(tmpc[1], inV, state.number_modes*sizeof(fftwl_complex));
+    fftwl_execute(ift0); 
+    fftwl_execute(ift1); 
+    map_quality(tmpc[0], tmpc[1], &QC_pass);
+    if (!QC_pass) {
+      printf("Bad Quality Map.\tTime = %.9LE\nStop!\n", time);
+      spec_out("last.spec.txt", tmpc[0], tmpc[1]);
+      restore_potential(inQ, inV, tmpc[2]);
+      print_constants();
+      exit(1);
+    }
+    //	End Quality Control
 
+    if ( !((j+1) % 40) ) {
+      counter++;
+      sprintf(filename2, "./data/spec_%04ld.txt", counter);
+      spec_out(filename2, tmpc[0], tmpc[1]);
+      convertQtoZ(inQ, tmpc[5]);
+      sprintf(filename1, "./data/surf_%04ld.txt", counter);
+      surface_out(filename1, tmpc[5]);
+      printf("Current time t = %.16LE\n", time);
+    }
 
+  }
 
 }
 

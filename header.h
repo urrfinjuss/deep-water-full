@@ -19,9 +19,10 @@ typedef struct input {
   long double gravity;			// free fall acceleration
   long double surface_tension;		// surface tension
   long double tolerance;		// tolerance for refinement
-  long double mean_level;
+  long double mean_level;		// mean level fluid
   long double kineticE;			// kinetic energy
   long double potentialE;		// potential energy
+  long double final_time;		// simulation time
   fftwl_complex momentum;		// momentum P = px + i*py
   unsigned long int refinement_counter;	// refinement counter
   unsigned long int number_poles;	// number of poles
@@ -81,6 +82,8 @@ extern void map_quality(fftwl_complex *in1, fftwl_complex *in2, unsigned int *QC
 // output.c
 extern void real_array_out(char* fname, long double *in);
 extern void complex_array_out(char *fname, fftwl_complex *in);
+extern void surface_out(char *fname, fftwl_complex *in);
+extern void spec_out(char *fname, fftwl_complex *in1, fftwl_complex *in2);
 extern void print_constants();
 
 // pade.c
@@ -91,4 +94,5 @@ extern void compute_rhs(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *o
 extern void allocate_timemarching();
 extern void deallocate_timemarching();
 extern void rk6_step(fftwl_complex *inQ, fftwl_complex *inV, long double dt);
+extern void evolve_rk6(fftwl_complex *inQ, fftwl_complex *inV);
 

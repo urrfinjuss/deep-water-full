@@ -143,11 +143,12 @@ void map_quality(fftwl_complex *in1, fftwl_complex *in2, unsigned int *QC_pass) 
   }
   qc_ratio = partial_sum1/sqrtl(1.L + powl(full_sum1, 2));
   qc_ratio = fmaxl(qc_ratio, partial_sum2/sqrtl(1.L+powl(full_sum2, 2)));
-  printf("Partial/Full\t%.19LE\n", qc_ratio);
   if (qc_ratio < 1.0E-15L) {
-	printf("QC Pass\n");
 	*QC_pass = 1;
-  } else printf("QC Fail\n");
+  } else {
+        printf("QC Fail\n");
+ 	*QC_pass = 0;
+  }
 }
 
 
