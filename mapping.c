@@ -146,12 +146,18 @@ void map_quality(fftwl_complex *in1, fftwl_complex *in2, unsigned int *QC_pass) 
   if (qc_ratio < 1.0E-15L) {
 	*QC_pass = 1;
   } else {
-        printf("QC Fail\n");
+        printf("QC Fail\nQC ratio is %.9LE\n", qc_ratio);
  	*QC_pass = 0;
   }
 }
 
-
+void map_quality_fourier(fftwl_complex *inQ, fftwl_complex *inV, unsigned int *QC_pass){
+    memcpy(tmpc[0], inQ, state.number_modes*sizeof(fftwl_complex));
+    memcpy(tmpc[1], inV, state.number_modes*sizeof(fftwl_complex));
+    fftwl_execute(ift0); 
+    fftwl_execute(ift1); 
+    map_quality(tmpc[0], tmpc[1], QC_pass);
+}
 
 
 

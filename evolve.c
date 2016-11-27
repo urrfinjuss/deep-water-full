@@ -165,55 +165,46 @@ void rk6_step(fftwl_complex *inQ, fftwl_complex *inV, long double dt) {
 }
 
 void evolve_rk6(fftwl_complex *inQ, fftwl_complex *inV) {
+
+  unsigned int	QC_pass = 1;
+  unsigned int 	counter = 0;
   char 		filename1[80];
   char 		filename2[80];
-  long double 	T  = state.final_time;
-  long double   dt = cfl*2.L*PI*conf.scaling/state.number_modes;
-  long int 	nsteps = lroundl(1.L*T/dt) + 1;
-  long int 	counter = 0;
-  long double   a_dt = T/nsteps;
   long double   time = 0.L;
-  unsigned int	QC_pass = 1;
+  long double   dt = cfl*2.L*PI*conf.scaling/state.number_modes;
 
-  memcpy(tmpc[0], inQ, state.number_modes*sizeof(fftwl_complex));
-  memcpy(tmpc[1], inV, state.number_modes*sizeof(fftwl_complex));
-  fftwl_execute(ift0); 
-  fftwl_execute(ift1); 
-  map_quality(tmpc[0], tmpc[1], &QC_pass);
+  map_quality_fourier(tmpc[0], tmpc[1], &QC_pass);
   if (!QC_pass) {
     printf("Bad Quality Map.\tTime = %.9LE\nStop!\n", time);
     exit(1);
   }
-  for (long int j = 0; j < nsteps + 1; j++) {
-    rk6_step(inQ, inV, a_dt);  
-    time = (j+1)*a_dt;
+  //for (long int j = 0; j < nsteps + 1; j++) {
+  unsigned long j = 0;
+  while (QC_pass) {
+    rk6_step(inQ, inV, dt);  
+    time = (j+1)*dt;
+    j++;
 
-    //   Quality Control
-    memcpy(tmpc[0], inQ, state.number_modes*sizeof(fftwl_complex));
-    memcpy(tmpc[1], inV, state.number_modes*sizeof(fftwl_complex));
-    fftwl_execute(ift0); 
-    fftwl_execute(ift1); 
-    map_quality(tmpc[0], tmpc[1], &QC_pass);
+    map_quality_fourier(inQ, inV, &QC_pass);
     if (!QC_pass) {
       printf("Bad Quality Map.\tTime = %.9LE\nStop!\n", time);
       spec_out("last.spec.txt", tmpc[0], tmpc[1]);
       restore_potential(inQ, inV, tmpc[2]);
       print_constants();
-      exit(1);
+    } else {
+      if ( !((j+1) % 40) ) {
+        counter++;
+        sprintf(filename2, "./data/spec_%04u.txt", counter);
+        spec_out(filename2, tmpc[0], tmpc[1]);
+        convertQtoZ(inQ, tmpc[5]);
+        sprintf(filename1, "./data/surf_%04u.txt", counter);
+        surface_out(filename1, tmpc[5]);
+        printf("Current time t = %.16LE\n", time);
+      }
     }
-    //	End Quality Control
-
-    if ( !((j+1) % 40) ) {
-      counter++;
-      sprintf(filename2, "./data/spec_%04ld.txt", counter);
-      spec_out(filename2, tmpc[0], tmpc[1]);
-      convertQtoZ(inQ, tmpc[5]);
-      sprintf(filename1, "./data/surf_%04ld.txt", counter);
-      surface_out(filename1, tmpc[5]);
-      printf("Current time t = %.16LE\n", time);
-    }
-
   }
+  printf("Simulation Stops\n");
+  exit(1);
 
 }
 
