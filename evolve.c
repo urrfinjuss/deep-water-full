@@ -4,7 +4,7 @@
 static fftwl_complex 	**kq, *tQ;
 static fftwl_complex 	**kv, *tV;
 
-static const long double	cfl		 = 0.5L;
+static const long double	cfl		 = 0.125L;
 static const long double 	one_third        = 1.0L/3.0L;
 static const long double 	two_thirds       = 2.0L/3.0L;
 static const long double 	one_twelfth      = 1.0L/12.0L;
@@ -164,42 +164,67 @@ void rk6_step(fftwl_complex *inQ, fftwl_complex *inV, long double dt) {
   memcpy(inV, tmpc[1], N*sizeof(fftwl_complex));
 }
 
-void evolve_rk6(fftwl_complex *inQ, fftwl_complex *inV) {
+void evolve_rk6() {
 
   unsigned int	QC_pass = 1;
-  unsigned int 	counter = 0;
+  unsigned int 	counter = 0, j = 0;
   char 		filename1[80];
   char 		filename2[80];
-  long double   time = 0.L;
+  long double	tshift = 0.L;
+  long double   time = 0.L, Ham = 0.L;
   long double   dt = cfl*2.L*PI*conf.scaling/state.number_modes;
 
-  map_quality_fourier(tmpc[0], tmpc[1], &QC_pass);
-  if (!QC_pass) {
-    printf("Bad Quality Map.\tTime = %.9LE\nStop!\n", time);
+  map_quality_fourier(data[0], data[1], 1.0E-15L, &QC_pass);
+  if (QC_pass == 0) {
+    printf("Bad quality map at start.\tStop!\n");
     exit(1);
+  } else if (QC_pass == 2) {
+    printf("Warning! Map is over-resolved at start.\n");
   }
-  //for (long int j = 0; j < nsteps + 1; j++) {
-  unsigned long j = 0;
+  restore_potential(data[0], data[1], tmpc[2]);  
+  Ham = (state.kineticE + state.potentialE)/PI;
+  printf("T = %13.9LE\tH = %23.18LE\n", time, Ham);
   while (QC_pass) {
-    rk6_step(inQ, inV, dt);  
+    rk6_step(data[0], data[1], dt);  
     time = (j+1)*dt;
     j++;
 
-    map_quality_fourier(inQ, inV, &QC_pass);
-    if (!QC_pass) {
+    map_quality_fourier(data[0], data[1], 1.0E-15L, &QC_pass);
+    if (QC_pass == 0) {
       printf("Bad Quality Map.\tTime = %.9LE\nStop!\n", time);
       spec_out("last.spec.txt", tmpc[0], tmpc[1]);
-      restore_potential(inQ, inV, tmpc[2]);
+      restore_potential(data[0], data[1], tmpc[2]);
       print_constants();
+      printf("Attemptng to fix the map.\n");
+      // Attempt to fix the conformal map
+      track_singularity(data[0]);
+      alt_map.scaling = conf.scaling/sqrtl(2.0L);
+      remap(&alt_map, 2*state.number_modes);
+      // Here goes a clever algorithm to choose a better map!
+      // End Attempt
+      map_quality_fourier(data[0], data[1], 1.0E-17L, &QC_pass);
+      if (QC_pass == 1) {
+	printf("A better map found.\n");
+	printf("Resume evolution from T = %13.9LE\n", time + tshift);
+        restore_potential(data[0], data[1], tmpc[2]);  
+        Ham = (state.kineticE + state.potentialE)/PI;
+        printf("T = %13.9LE\tH = %23.18LE\n", time + tshift, Ham);
+        tshift += time;
+      } else {
+	printf("Failed to find a good map!\n");
+	exit(1);
+      }
     } else {
       if ( !((j+1) % 40) ) {
         counter++;
         sprintf(filename2, "./data/spec_%04u.txt", counter);
         spec_out(filename2, tmpc[0], tmpc[1]);
-        convertQtoZ(inQ, tmpc[5]);
+        convertQtoZ(data[0], tmpc[5]);
         sprintf(filename1, "./data/surf_%04u.txt", counter);
         surface_out(filename1, tmpc[5]);
-        printf("Current time t = %.16LE\n", time);
+        restore_potential(data[0], data[1], tmpc[2]);  
+        Ham = (state.kineticE + state.potentialE)/PI;
+        printf("T = %13.9LE\tH = %23.18LE\n", time, Ham);
       }
     }
   }

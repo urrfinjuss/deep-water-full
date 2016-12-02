@@ -2,6 +2,13 @@
 
 static fftwl_complex *saveQ, *saveV;
 
+static long double full_sum1;
+static long double full_sum2;
+static long double narrow_sum1; 
+static long double narrow_sum2; 
+static long double partial_sum1;
+static long double partial_sum2;
+
 void set_mapping() {
   long double overN = 1.0L/state.number_modes;
   long double a = (1.0L - powl(conf.scaling, 2))/(1.0L + powl(conf.scaling, 2));
@@ -97,7 +104,7 @@ void remap(map_ptr new_map, unsigned long int N) {
   }
   memset(tmpc[0]+state.number_modes/2, 0, state.number_modes/2*sizeof(fftwl_complex));
   memset(tmpc[1]+state.number_modes/2, 0, state.number_modes/2*sizeof(fftwl_complex));
-  map_quality(tmpc[0], tmpc[1], &QC_pass);
+  map_quality(tmpc[0], tmpc[1], 1.0E-17L, &QC_pass);
   //complex_array_out("postref.Q.ft.txt", tmpc[0]);
   //complex_array_out("postref.V.ft.txt", tmpc[1]);
   if (QC_pass) {
@@ -126,12 +133,15 @@ void remap(map_ptr new_map, unsigned long int N) {
   fftwl_free(saveV); 
 }
 
-void map_quality(fftwl_complex *in1, fftwl_complex *in2, unsigned int *QC_pass) {
-  long double full_sum1		= 0.0L;
-  long double full_sum2		= 0.0L;
-  long double partial_sum1	= 0.0L;
-  long double partial_sum2	= 0.0L;
-  long double qc_ratio		= 1.0L;
+void map_quality(fftwl_complex *in1, fftwl_complex *in2, long double tol, unsigned int *QC_pass) {
+  long double qc_ratio	= 1.0L;
+  long double nqc_ratio	= 1.0L;
+  full_sum1	= 0.0L;
+  full_sum2	= 0.0L;
+  partial_sum1	= 0.0L;
+  partial_sum2	= 0.0L;
+  narrow_sum1	= 0.0L; 
+  narrow_sum2	= 0.0L; 
 
   for (long int j = state.number_modes/2-1; j > -1; j--) {
     full_sum1 += cabsl(in1[j]);
@@ -139,28 +149,57 @@ void map_quality(fftwl_complex *in1, fftwl_complex *in2, unsigned int *QC_pass) 
     if (j == state.number_modes*7/16) {
       partial_sum1 = full_sum1;
       partial_sum2 = full_sum2;
+    } else if (j == state.number_modes*3/16) {
+      narrow_sum1 = full_sum1;
+      narrow_sum2 = full_sum2;
     }
   }
   qc_ratio = partial_sum1/sqrtl(1.L + powl(full_sum1, 2));
   qc_ratio = fmaxl(qc_ratio, partial_sum2/sqrtl(1.L+powl(full_sum2, 2)));
-  if (qc_ratio < 1.0E-15L) {
+  nqc_ratio = narrow_sum1/sqrtl(1.L + powl(full_sum1, 2));
+  nqc_ratio = fmaxl(nqc_ratio, narrow_sum2/sqrtl(1.L+powl(full_sum2, 2)));
+  if (qc_ratio < tol) {
+        //printf("QC Pass\nQC ratio is %.9LE\n", qc_ratio);
 	*QC_pass = 1;
+	if (nqc_ratio < tol) *QC_pass = 2;
   } else {
         printf("QC Fail\nQC ratio is %.9LE\n", qc_ratio);
  	*QC_pass = 0;
   }
 }
 
-void map_quality_fourier(fftwl_complex *inQ, fftwl_complex *inV, unsigned int *QC_pass){
+void map_quality_fourier(fftwl_complex *inQ, fftwl_complex *inV, long double tol, unsigned int *QC_pass){
     memcpy(tmpc[0], inQ, state.number_modes*sizeof(fftwl_complex));
     memcpy(tmpc[1], inV, state.number_modes*sizeof(fftwl_complex));
     fftwl_execute(ift0); 
     fftwl_execute(ift1); 
-    map_quality(tmpc[0], tmpc[1], QC_pass);
+    map_quality(tmpc[0], tmpc[1], tol, QC_pass);
 }
 
+void track_singularity(fftwl_complex *inQ) {
+  long int 	N 	= state.number_modes;
+  long double   overN 	= 1.L/N; 
+  long double   maxabsd2Q = 1.L;
+  long double   q_max   = 0.L;
 
-
+  memcpy(tmpc[0], inQ, N*sizeof(fftwl_complex));
+  fftwl_execute(ift0);
+  for (long int j = 0; j < N/2; j++) {
+    tmpc[0][j] = -1.L*j*j*tmpc[0][j]*overN;
+  }
+  memset(tmpc[0]+N/2, 0, N/2*sizeof(fftwl_complex));
+  fftwl_execute(ft0);
+  for (long int j = 0; j < N; j++) {
+    tmpr[0][j] = cabsl(tmpc[0][j]);
+    if (maxabsd2Q < tmpr[0][j]) {
+	maxabsd2Q = tmpr[0][j];
+        q_max = PI*(2.L*j*overN - 1.L);
+    }
+  }  
+  alt_map.origin_offset = q_max;
+  alt_map.image_offset = conf.image_offset + 2.0L*atan2l(conf.scaling*sinl(0.5L*(q_max-conf.origin_offset)), cosl(0.5L*(q_max-conf.origin_offset)));
+ // printf("max_Abs_d2Q = %.19LE\tq_max = %.19LE\tu_max = %.19LE\n", maxabsd2Q, q_max, alt_map.image_offset);
+}
 
 
 

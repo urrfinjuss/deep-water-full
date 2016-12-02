@@ -38,8 +38,8 @@ typedef struct conformal_mapping {
 } map, *map_ptr;
 
 // -------- Global Variables
-extern params state;
-extern map conf;
+extern params 		state;
+extern map 		conf, alt_map;
 extern long double 	**tmpr;
 extern fftwl_complex 	**tmpc;
 extern fftwl_complex	**data;
@@ -77,8 +77,9 @@ extern void restore_potential(fftwl_complex *inQ, fftwl_complex *inV, fftwl_comp
 
 // mapping.c
 extern void set_mapping();
-extern void map_quality(fftwl_complex *in1, fftwl_complex *in2, unsigned int *QC_pass);
-extern void map_quality_fourier(fftwl_complex *inQ, fftwl_complex *inV, unsigned int *QC_pass);
+extern void map_quality(fftwl_complex *in1, fftwl_complex *in2, long double tol, unsigned int *QC_pass);
+extern void map_quality_fourier(fftwl_complex *inQ, fftwl_complex *inV, long double tol, unsigned int *QC_pass);
+extern void track_singularity(fftwl_complex *inQ);
 
 // output.c
 extern void real_array_out(char* fname, long double *in);
@@ -88,12 +89,14 @@ extern void spec_out(char *fname, fftwl_complex *in1, fftwl_complex *in2);
 extern void print_constants();
 
 // pade.c
-extern void set_Q0(unsigned long d);
+extern void allocate_pade(unsigned long d);
+extern void deallocate_pade();
+extern void pade_array_out(char *fname, fftwl_complex *in);
 
 // evolve.c
 extern void compute_rhs(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *outQ, fftwl_complex *outV);
 extern void allocate_timemarching();
 extern void deallocate_timemarching();
 extern void rk6_step(fftwl_complex *inQ, fftwl_complex *inV, long double dt);
-extern void evolve_rk6(fftwl_complex *inQ, fftwl_complex *inV);
+extern void evolve_rk6();
 
