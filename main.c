@@ -65,8 +65,8 @@ int main( int argc, char* argv[]) {
   //complex_array_out("zt-recovered-2.txt", tmpc[5]);
   //restore_potential(data[0], data[1], tmpc[3]);  
   print_constants();
-  allocate_pade(3);
-  exit(1);
+  //allocate_pade(3);
+  //exit(1);
   //rk6_step(data[0], data[1], 0.05);
   //convertQtoZ(data[0], tmpc[5]);  
   //complex_array_out("zt-after-step.txt", tmpc[5]);

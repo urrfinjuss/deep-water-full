@@ -89,9 +89,10 @@ extern void spec_out(char *fname, fftwl_complex *in1, fftwl_complex *in2);
 extern void print_constants();
 
 // pade.c
-extern void allocate_pade(unsigned long d);
+extern void allocate_pade(unsigned long nD);
 extern void deallocate_pade();
 extern void pade_array_out(char *fname, fftwl_complex *in);
+extern void compute_rational(unsigned long nD);
 
 // evolve.c
 extern void compute_rhs(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *outQ, fftwl_complex *outV);

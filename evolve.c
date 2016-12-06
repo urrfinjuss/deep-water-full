@@ -192,6 +192,7 @@ void evolve_rk6() {
     map_quality_fourier(data[0], data[1], 1.0E-15L, &QC_pass);
     if (QC_pass == 0) {
       printf("Bad Quality Map.\tTime = %.9LE\nStop!\n", time);
+      compute_rational(16);
       spec_out("last.spec.txt", tmpc[0], tmpc[1]);
       restore_potential(data[0], data[1], tmpc[2]);
       print_constants();
