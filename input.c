@@ -41,8 +41,9 @@ void set_initial_data() {
     data[0][j] = -sinl(fi)+0.125L*sinl(2.L*fi)-33.0IL/64.L + 1.IL*cexpl(-1.IL*u) + 0.125IL*cexpl(-2.IL*u); // easy Z-tilde
     data[0][j] = -1.IL*cpowl(0.01L*(1.L/ctanl(0.5L*(u-0.1IL)) - 1.IL),2);
     //data[0][j] = 1.L + 0.5L*cexpl(-1.IL*u); // set Q directly
-    data[1][j] = 0.L*cexpl(-1.IL*u); 
+    data[1][j] = 0.L*cexpl(-1.IL*u);
   }
+  complex_array_out("data0.txt", data[0]);
 }
 
 void load_ascii() {

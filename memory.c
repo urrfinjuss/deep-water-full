@@ -35,9 +35,7 @@ void allocate_memory() {
   aux_array = fftwl_malloc(state.number_modes*sizeof(fftwl_complex));
   data[0] = fftwl_malloc(state.number_modes*sizeof(fftwl_complex));
   data[1] = fftwl_malloc(state.number_modes*sizeof(fftwl_complex));
-  memset(data[0], 0, state.number_modes*sizeof(fftwl_complex));
-  memset(data[1], 0, state.number_modes*sizeof(fftwl_complex));
-  allocate_timemarching();
+  //allocate_timemarching();
 
   ft0  = fftwl_plan_dft_1d(state.number_modes, tmpc[0], tmpc[0], FFTW_FORWARD, FMODE);
   ft1  = fftwl_plan_dft_1d(state.number_modes, tmpc[1], tmpc[1], FFTW_FORWARD, FMODE);
@@ -49,6 +47,10 @@ void allocate_memory() {
   ift2 = fftwl_plan_dft_1d(state.number_modes, tmpc[2], tmpc[2], FFTW_BACKWARD, FMODE);
   ift3 = fftwl_plan_dft_1d(state.number_modes, tmpc[3], tmpc[3], FFTW_BACKWARD, FMODE);
   ift4 = fftwl_plan_dft_1d(state.number_modes, tmpc[4], tmpc[4], FFTW_BACKWARD, FMODE);
+  memset(data[0], 0, state.number_modes*sizeof(fftwl_complex));
+  memset(data[1], 0, state.number_modes*sizeof(fftwl_complex));
+  for (long int j = 0; j < n_complex_arrays; j++) memset(tmpc[j], 0, state.number_modes*sizeof(fftwl_complex));
+  for (long int j = 0; j < n_real_arrays; j++) memset(tmpr[j], 0, state.number_modes*sizeof(long double));
 }
 
 

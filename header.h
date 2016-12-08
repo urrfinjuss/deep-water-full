@@ -37,9 +37,18 @@ typedef struct conformal_mapping {
   long double 	origin_offset;		// accumulation center in q-plane
 } map, *map_ptr;
 
+typedef struct pade_data {
+  unsigned int  n_lins;			// number of iterations for Q^{k}
+  unsigned int	n_poles;		// degree of denominator (number of poles)
+  long double	l2_nrm;		// L2 norm of the target function
+  long double   l2_abs_err;		// L2 norm of (P/Q - W) dq
+  long double 	l2_rel_err;		// L2 norm of (P/Q - W) / L2 norm of W
+} pade, *pade_ptr;
+
 // -------- Global Variables
 extern params 		state;
 extern map 		conf, alt_map;
+extern pade		pade_data;
 extern long double 	**tmpr;
 extern fftwl_complex 	**tmpc;
 extern fftwl_complex	**data;
@@ -89,13 +98,18 @@ extern void spec_out(char *fname, fftwl_complex *in1, fftwl_complex *in2);
 extern void print_constants();
 
 // pade.c
+extern void init_pade();
 extern void allocate_pade(unsigned long nD);
 extern void deallocate_pade();
 extern void pade_array_out(char *fname, fftwl_complex *in);
-extern void compute_rational(unsigned long nD);
+extern void compute_rational(unsigned long nD, unsigned long n_max_iter);
+extern void optimal_pade();
+extern void find_l2_error(pade_ptr inp);
+extern void print_pade(pade_ptr inp);
 
 // evolve.c
 extern void compute_rhs(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *outQ, fftwl_complex *outV);
+extern void init_timemarching();
 extern void allocate_timemarching();
 extern void deallocate_timemarching();
 extern void rk6_step(fftwl_complex *inQ, fftwl_complex *inV, long double dt);

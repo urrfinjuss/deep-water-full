@@ -3,11 +3,19 @@
 //static fftwl_complex *coeffQ, *coeffP;
 static long double *M;
 static fftwl_complex *arrayQ,  *arrayP;
-static fftwl_complex **A, **B, **C, **D;
+static fftwl_complex **A, **B;
+//static fftwl_complex **C, **D;
 static fftwl_complex *W, *tmp;
 static fftwl_complex **Gees, **Cees;
 static long double *Ens;
 
+void init_pade(){
+  Gees = fftwl_malloc(4*sizeof(fftwl_complex *));
+  Cees = fftwl_malloc(4*sizeof(fftwl_complex *));
+  Ens = fftwl_malloc(4*sizeof(long double));
+  A = fftwl_malloc(4*sizeof(fftwl_complex *));
+  B = fftwl_malloc(4*sizeof(fftwl_complex *));
+}
 void pade_real_out(char *fname, long double *in) {
   unsigned long 	N = state.number_modes;
   long double		q, overN = 1.L/N;
@@ -35,7 +43,6 @@ void pade_complex_out(char *fname, fftwl_complex *in) {
 void set_weight() {
   unsigned long 	N = state.number_modes;
   long double		q, overN = 1.L/N;
-
   for (long int j = 0; j < N-1; j++) {
     q = PI*(2.0L*(j+1)*overN - 1.0L);
     M[j] = 0.5L/powl(cosl(0.5*q), 2)/creall(arrayQ[j]*conjl(arrayQ[j]));
@@ -63,26 +70,23 @@ void allocate_pade(unsigned long nD) {
   unsigned long 	N = state.number_modes;
   long double 		q, overN = 1.L/N;
   fftwl_complex		xi;
- 
-  Gees = fftwl_malloc(4*sizeof(fftwl_complex *));
-  Cees = fftwl_malloc(4*sizeof(fftwl_complex *));
-  Ens = fftwl_malloc(4*sizeof(long double));
+
+  //pade_arr = fftwl_malloc(2*sizeof(pade)); 
   M = fftwl_malloc((N-1)*sizeof(long double));
   W = fftwl_malloc((N-1)*sizeof(fftwl_complex));
   tmp = fftwl_malloc((N-1)*sizeof(fftwl_complex));
   arrayQ = fftwl_malloc((N - 1)*sizeof(fftwl_complex));
   arrayP = fftwl_malloc((N - 1)*sizeof(fftwl_complex));
-  A = fftwl_malloc(4*sizeof(fftwl_complex *));
-  B = fftwl_malloc(4*sizeof(fftwl_complex *));
-  C = fftwl_malloc(4*sizeof(fftwl_complex *));
-  D = fftwl_malloc(4*sizeof(fftwl_complex *));
+  //C = fftwl_malloc(4*sizeof(fftwl_complex *));
+  //D = fftwl_malloc(4*sizeof(fftwl_complex *));
   for (int k = 0; k < 4; k++) {
     Gees[k] = fftwl_malloc((N - 1)*sizeof(fftwl_complex));
     Cees[k] = fftwl_malloc((2*nD + 1)*sizeof(fftwl_complex));
     A[k] = fftwl_malloc((N-1)*sizeof(fftwl_complex));
     B[k] = fftwl_malloc((N-1)*sizeof(fftwl_complex));
-    C[k] = fftwl_malloc((N-1)*sizeof(fftwl_complex));
-    D[k] = fftwl_malloc((N-1)*sizeof(fftwl_complex));
+    printf("Pointers %d: %p %p %p %p\n", k, B[k], A[k], Cees[k], Gees[k]);
+    //C[k] = fftwl_malloc((N-1)*sizeof(fftwl_complex));
+    //D[k] = fftwl_malloc((N-1)*sizeof(fftwl_complex));
   }
   for (unsigned long j = 0; j < N-1; j++) arrayQ[j] = 1.0L;
   for (int k = 0; k < nD; k++) {
@@ -93,27 +97,31 @@ void allocate_pade(unsigned long nD) {
     }
   }
   prepare_array(data[0]);
-  pade_complex_out("Q0.txt", W);
-  pade_real_out("Weight.txt", M);
-  printf("Dot Prod: Re = %.12LE\tIm = %.12LE\n", creall(dot(W,W)), cimagl(dot(W,W)));
+  //pade_complex_out("Q0.txt", W);
+  //pade_real_out("Weight.txt", M);
+  //printf("Dot Prod: Re = %.12LE\tIm = %.12LE\n", creall(dot(W,W)), cimagl(dot(W,W)));
 }
 
 void deallocate_pade() {
-   fftwl_free(arrayQ); 
-   fftwl_free(arrayP);
-   fftwl_free(M);
-   fftwl_free(W);
-   fftwl_free(tmp);
+   printf("Deallocate Start\n");
    for (int k = 0; k < 4; k++) {
-     fftwl_free(Gees[k]);
-     fftwl_free(Cees[k]);
-     fftwl_free(A[k]);
+     //fftwl_free(D[k]);
+     //fftwl_free(C[k]);
+     printf("Pointer %p\n", B[k]);
      fftwl_free(B[k]);
-     fftwl_free(C[k]);
-     fftwl_free(D[k]);
+     printf("Pointer %p\n", A[k]);
+     fftwl_free(A[k]);
+     printf("Pointer %p\n", Cees[k]);
+     fftwl_free(Cees[k]);
+     printf("Pointer %p\n", Gees[k]);
+     fftwl_free(Gees[k]);
    }
-   fftwl_free(Gees);
-   fftwl_free(Cees);
+   printf("Here\n");
+   fftwl_free(arrayP); 
+   fftwl_free(arrayQ);
+   fftwl_free(tmp);
+   fftwl_free(W);
+   fftwl_free(M);
 }
 
 void evaluate_poly_array(unsigned long nD) {
@@ -171,7 +179,6 @@ void sigma_mul(fftwl_complex *in, fftwl_complex *out) {
 
 void gram_schmidt(unsigned long nD){
   unsigned long N = state.number_modes;
-
   memset(Ens, 0, 4*sizeof(long double));
   for (unsigned k = 0; k < 4; k++) {
     memset(Cees[k], 0, (2*nD + 1)*sizeof(fftwl_complex));
@@ -224,38 +231,85 @@ void gram_schmidt(unsigned long nD){
   }
 }
 
-void compute_rational(unsigned long nD) {
-  unsigned long N = state.number_modes; 
+void compute_rational(unsigned long nD, unsigned long n_max_iter) {
+  pade_data.n_lins = 0;
+  pade_data.n_poles = nD;
 
   allocate_pade(nD);
-  pade_real_out("m0.txt", M);
   gram_schmidt(nD);
   evaluate_poly_array(nD);
-  set_weight();
-  pade_real_out("m1.txt", M);
-  gram_schmidt(nD);
-  evaluate_poly_array(nD);
-  set_weight();
-  pade_real_out("m2.txt", M);
-  gram_schmidt(nD);
-  evaluate_poly_array(nD);
-  set_weight();
-  pade_real_out("m3.txt", M);
-  gram_schmidt(nD);
-  evaluate_poly_array(nD);
-  set_weight();
-  pade_real_out("m4.txt", M);
-  gram_schmidt(nD);
-  evaluate_poly_array(nD);
-  set_weight();
-  pade_real_out("m5.txt", M);
-  for (unsigned int j = 0; j < N-1; j++){
-    tmp[j] = arrayP[j]/arrayQ[j];
+  find_l2_error(&pade_data);  
+  pade_data.n_lins++;
+
+  printf("Target function norm: %.18LE\n", pade_data.l2_nrm); 
+  printf("Number of poles: %3u\n", pade_data.n_poles);
+  print_pade(&pade_data);
+
+  for (unsigned int j = 1; j < n_max_iter; j++) {
+    set_weight();
+    gram_schmidt(nD);
+    evaluate_poly_array(nD);
+    find_l2_error(&pade_data);  
+    pade_data.n_lins++;
+    print_pade(&pade_data);
   }
-  pade_complex_out("rational.txt", tmp);
+  set_weight();
+  //for (unsigned int j = 0; j < N-1; j++){
+    //tmp[j] = arrayP[j]/arrayQ[j] - W[j];
+  //}
+  //pade_real_out("m5.txt", M);
+  //pade_complex_out("rational.txt", tmp);
   deallocate_pade();
+  //exit(1);
+}
+
+void optimal_pade() {
+  unsigned long nd = 0;
+  pade best_pade;  
+  best_pade.l2_rel_err = 1.L;
+
+  //for (unsigned int nd = 1; nd < 32; nd++) {
+  while (nd < 32) {
+    nd++;
+    best_pade.n_poles = nd;
+    pade_data.n_lins = 0;
+    compute_rational(nd, 8);
+    if (pade_data.l2_rel_err < best_pade.l2_rel_err) {
+      best_pade.l2_rel_err = pade_data.l2_rel_err;
+      best_pade.l2_abs_err = pade_data.l2_abs_err;
+      best_pade.l2_nrm = pade_data.l2_nrm;
+      best_pade.n_poles = nd;
+      best_pade.n_lins = 8;
+    } else {
+      printf("Best Pade has %3ld poles. ", nd);
+      printf("Relative Error = %.18LE\n", best_pade.l2_rel_err);
+      break;
+    } 
+  }
   exit(1);
 }
+
+void print_pade(pade_ptr inp) { 
+  printf("Iter #%3u:\t", inp->n_lins); 
+  printf("%.18LE\n", inp->l2_rel_err); 
+}
+
+void find_l2_error(pade_ptr inp){
+  unsigned long N = state.number_modes;
+  long double overN = 2.L*PI/N, tmp;
+  inp->l2_nrm = 0.L;
+  inp->l2_abs_err = 0.L;
+
+  for (unsigned int j = 0; j < N-1; j++) {
+    tmp = (arrayP[j]/arrayQ[j] - W[j]);
+    inp->l2_nrm += creall(W[j]*conjl(W[j]));
+    inp->l2_abs_err += creall(tmp*conjl(tmp));    
+  }
+  inp->l2_nrm = sqrtl(inp->l2_nrm)*overN;
+  inp->l2_abs_err = sqrtl(inp->l2_abs_err)*overN;
+  inp->l2_rel_err = (inp->l2_abs_err)/(inp->l2_nrm);
+}
+
 
 
 
