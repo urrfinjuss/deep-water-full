@@ -1,13 +1,12 @@
 #include "header.h"
 
 //static fftwl_complex *coeffQ, *coeffP;
-static long double *M;
+static long double *M, *Ens;
 static fftwl_complex *arrayQ,  *arrayP;
 static fftwl_complex **A, **B;
 //static fftwl_complex **C, **D;
 static fftwl_complex *W, *tmp;
 static fftwl_complex **Gees, **Cees;
-static long double *Ens;
 
 void init_pade(){
   Gees = fftwl_malloc(4*sizeof(fftwl_complex *));
@@ -34,7 +33,7 @@ void pade_complex_out(char *fname, fftwl_complex *in) {
   FILE *fh = fopen(fname, "w");
   fprintf(fh, "# 1. q 2. re 3. im\n\n");
   for (long int j = 0; j < N-1; j++) {
-    q = PI*(2.0L*(j+1)*overN - 1.0L);
+    q = PI*(2.0L*(j+1.L)*overN - 1.0L);
     fprintf(fh, "%.18LE\t%.18LE\t%.18LE\n", q, creall(in[j]), cimagl(in[j]));
   }
   fclose(fh);
@@ -44,8 +43,8 @@ void set_weight() {
   unsigned long 	N = state.number_modes;
   long double		q, overN = 1.L/N;
   for (long int j = 0; j < N-1; j++) {
-    q = PI*(2.0L*(j+1)*overN - 1.0L);
-    M[j] = 0.5L/powl(cosl(0.5*q), 2)/creall(arrayQ[j]*conjl(arrayQ[j]));
+    q = PI*(2.0L*(j+1.L)*overN - 1.0L);
+    M[j] = 0.5L/powl(cosl(0.5L*q), 2)/creall(arrayQ[j]*conjl(arrayQ[j]));
   }
 }
 
@@ -84,7 +83,6 @@ void allocate_pade(unsigned long nD) {
     Cees[k] = fftwl_malloc((2*nD + 1)*sizeof(fftwl_complex));
     A[k] = fftwl_malloc((N-1)*sizeof(fftwl_complex));
     B[k] = fftwl_malloc((N-1)*sizeof(fftwl_complex));
-    printf("Pointers %d: %p %p %p %p\n", k, B[k], A[k], Cees[k], Gees[k]);
     //C[k] = fftwl_malloc((N-1)*sizeof(fftwl_complex));
     //D[k] = fftwl_malloc((N-1)*sizeof(fftwl_complex));
   }
@@ -92,8 +90,8 @@ void allocate_pade(unsigned long nD) {
   for (int k = 0; k < nD; k++) {
     xi = -1.0L + 1.0L*cexpl(0.5L*PI*(k + 0.5L)/nD); 
     for (unsigned long j = 0; j < N-1; j++) {
-      q = PI*(2.0L*(j + 1)*overN - 1.0L);
-      arrayQ[j] = arrayQ[j]*(tanl(0.5L*q) + 1.IL*xi);
+      q = PI*(2.0L*(j + 1.L)*overN - 1.0L);
+      arrayQ[j] = arrayQ[j]*(tanl(0.5L*q) + 1.IL*xi);  // do renormaliztion
     }
   }
   prepare_array(data[0]);
@@ -103,25 +101,20 @@ void allocate_pade(unsigned long nD) {
 }
 
 void deallocate_pade() {
-   printf("Deallocate Start\n");
    for (int k = 0; k < 4; k++) {
      //fftwl_free(D[k]);
      //fftwl_free(C[k]);
-     printf("Pointer %p\n", B[k]);
-     fftwl_free(B[k]);
-     printf("Pointer %p\n", A[k]);
-     fftwl_free(A[k]);
-     printf("Pointer %p\n", Cees[k]);
-     fftwl_free(Cees[k]);
-     printf("Pointer %p\n", Gees[k]);
-     fftwl_free(Gees[k]);
+     fftwl_free(B[3-k]);
+     fftwl_free(A[3-k]);
+     fftwl_free(Cees[3-k]);
+     fftwl_free(Gees[3-k]);
    }
-   printf("Here\n");
    fftwl_free(arrayP); 
    fftwl_free(arrayQ);
    fftwl_free(tmp);
    fftwl_free(W);
    fftwl_free(M);
+   //exit(1);
 }
 
 void evaluate_poly_array(unsigned long nD) {
@@ -129,7 +122,7 @@ void evaluate_poly_array(unsigned long nD) {
   long double	s, overN = 1.L/N;
   
   for (unsigned long j = 0; j < N-1; j++) {
-    s = tanl(0.5L*PI*(2.L*(j+1)*overN - 1.L));
+    s = tanl(0.5L*PI*(2.L*(j+1.L)*overN - 1.L));
     // --------   step 0
     A[0][j] = 0.L;
     B[0][j] = 1.L;
@@ -172,7 +165,7 @@ void sigma_mul(fftwl_complex *in, fftwl_complex *out) {
   unsigned long N = state.number_modes;
   long double	s, overN = 1.L/N;
   for (unsigned long j = 0; j < N-1; j++) {
-    s = tanl(0.5L*PI*(2.L*(j+1)*overN - 1.L));
+    s = tanl(0.5L*PI*(2.L*(j+1.L)*overN - 1.L));
     out[j] = s*in[j];
   }
 }
@@ -241,9 +234,7 @@ void compute_rational(unsigned long nD, unsigned long n_max_iter) {
   find_l2_error(&pade_data);  
   pade_data.n_lins++;
 
-  printf("Target function norm: %.18LE\n", pade_data.l2_nrm); 
-  printf("Number of poles: %3u\n", pade_data.n_poles);
-  print_pade(&pade_data);
+  //print_pade(&pade_data);
 
   for (unsigned int j = 1; j < n_max_iter; j++) {
     set_weight();
@@ -251,7 +242,7 @@ void compute_rational(unsigned long nD, unsigned long n_max_iter) {
     evaluate_poly_array(nD);
     find_l2_error(&pade_data);  
     pade_data.n_lins++;
-    print_pade(&pade_data);
+    //print_pade(&pade_data);
   }
   set_weight();
   //for (unsigned int j = 0; j < N-1; j++){
@@ -259,33 +250,49 @@ void compute_rational(unsigned long nD, unsigned long n_max_iter) {
   //}
   //pade_real_out("m5.txt", M);
   //pade_complex_out("rational.txt", tmp);
-  deallocate_pade();
+  //deallocate_pade();
   //exit(1);
 }
 
 void optimal_pade() {
-  unsigned long nd = 0;
+  FILE *fh = fopen("pc_rate.txt","w");
+  unsigned long nd = 1, l_iters = 8;
   pade best_pade;  
   best_pade.l2_rel_err = 1.L;
-
+  
+  fprintf(fh, "# 1. nD, number poles 2. Error\n\n");
   //for (unsigned int nd = 1; nd < 32; nd++) {
   while (nd < 32) {
     nd++;
     best_pade.n_poles = nd;
     pade_data.n_lins = 0;
-    compute_rational(nd, 8);
+    compute_rational(nd, l_iters);
+    deallocate_pade();
     if (pade_data.l2_rel_err < best_pade.l2_rel_err) {
       best_pade.l2_rel_err = pade_data.l2_rel_err;
       best_pade.l2_abs_err = pade_data.l2_abs_err;
       best_pade.l2_nrm = pade_data.l2_nrm;
       best_pade.n_poles = nd;
-      best_pade.n_lins = 8;
+      best_pade.n_lins = l_iters;
+      printf("Relative Error (nd = %3lu) = %11.5LE\n", nd, best_pade.l2_rel_err);
+      fprintf(fh, "%.3lu\t%11.5LE\n", nd, best_pade.l2_rel_err);
     } else {
-      printf("Best Pade has %3ld poles. ", nd);
-      printf("Relative Error = %.18LE\n", best_pade.l2_rel_err);
+      nd = nd-2;
+      best_pade.n_poles = nd;
+      pade_data.n_lins = 0;
+      compute_rational(nd, l_iters);
+      newton_search(nd);
+      deallocate_pade();
+      best_pade.l2_rel_err = pade_data.l2_rel_err;
+      best_pade.l2_abs_err = pade_data.l2_abs_err;
+      best_pade.l2_nrm = pade_data.l2_nrm;
+      best_pade.n_poles = nd;
+      best_pade.n_lins = l_iters;
+      printf("Safe Relative Error (nd = %3lu) = %11.5LE\n", nd, best_pade.l2_rel_err);
       break;
     } 
   }
+  fclose(fh);
   exit(1);
 }
 
@@ -296,7 +303,8 @@ void print_pade(pade_ptr inp) {
 
 void find_l2_error(pade_ptr inp){
   unsigned long N = state.number_modes;
-  long double overN = 2.L*PI/N, tmp;
+  fftwl_complex	tmp;
+  long double overN = 2.L*PI/N;
   inp->l2_nrm = 0.L;
   inp->l2_abs_err = 0.L;
 
@@ -311,6 +319,116 @@ void find_l2_error(pade_ptr inp){
 }
 
 
+void evaluate_poly(fftwl_complex *in, unsigned long nD, fftwl_complex *outQ, fftwl_complex *outQp, fftwl_complex *outP){
+  fftwl_complex  	tmp_C, tmp_B, tmp_A;
+  fftwl_complex		P[4], Q[4], dQ[4];
+  fftwl_complex		s;
+   
+  s = ctanl(0.5L*(*in));
+  P[0] = 0.L;
+  dQ[0] = 0.L;
+  Q[0] = 1.L;
+  P[1] = -1.L;
+  dQ[1] = 0.L;
+  Q[1] = -Cees[0][1];
+
+  P[2]  = s*P[0] - Cees[0][2]*P[1] - Cees[1][2]*P[0];
+  dQ[2] = Q[0] + s*dQ[0] - Cees[0][2]*dQ[1] - Cees[1][2]*dQ[0];
+  Q[2]  = s*Q[0] - Cees[0][2]*Q[1] - Cees[1][2]*Q[0];
+
+  P[3]  = s*P[1] - Cees[0][3]*P[2] - Cees[1][3]*P[1] - Cees[2][3]*P[0];
+  dQ[3] = Q[1] + s*dQ[1] - Cees[0][3]*dQ[2] - Cees[1][3]*dQ[1] - Cees[2][3]*dQ[0];
+  Q[3]  = s*Q[1] - Cees[0][3]*Q[2] - Cees[1][3]*Q[1] - Cees[2][3]*Q[0];
+  for (unsigned long k = 4; k < 2*nD + 1; k++) {
+    tmp_C = s*P[2] - Cees[0][k]*P[3] - Cees[1][k]*P[2] - Cees[2][k]*P[1] - Cees[3][k]*P[0];
+    tmp_B = s*Q[2] - Cees[0][k]*Q[3] - Cees[1][k]*Q[2] - Cees[2][k]*Q[1] - Cees[3][k]*Q[0];
+    tmp_A = Q[2] + s*dQ[2] - Cees[0][k]*dQ[3] - Cees[1][k]*dQ[2] - Cees[2][k]*dQ[1] - Cees[3][k]*dQ[0];
+    P[0] = P[1];
+    P[1] = P[2];
+    P[2] = P[3];
+    P[3] = tmp_C;
+    Q[0] = Q[1];
+    Q[1] = Q[2];
+    Q[2] = Q[3];
+    Q[3] = tmp_B;
+    dQ[0] = dQ[1];
+    dQ[1] = dQ[2];
+    dQ[2] = dQ[3];
+    dQ[3] = tmp_A; 
+  } 
+  *outP  = P[3];  
+  *outQ  = Q[3];
+  *outQp = dQ[3];
+}
 
 
+void newton_search(unsigned long nD) {
+  fftwl_complex *roots = fftwl_malloc(nD*sizeof(fftwl_complex));
+  fftwl_complex *residues = fftwl_malloc(nD*sizeof(fftwl_complex));
+  fftwl_complex z = 1.0L+0.5IL;
+  fftwl_complex p = 0.L;
+  fftwl_complex f = 1.L, df;
+  fftwl_complex inv_sum;
+  long int counter = 0;
+  char str[80];
+  FILE *fh;
 
+  for (int j = 0; j < nD; j++) {  
+    sprintf(str, "./roots/root_%03d.txt", j);
+    fh = fopen(str, "w");
+    z = 1.0L+0.5IL;
+    f = 1.L; 
+    inv_sum = 1.L;
+    while ( cabsl(f*inv_sum) > 5.0E-29L) {
+      evaluate_poly(&z, nD, &f, &df, &p);
+      if ( j == 0) {
+	inv_sum = 1.L;
+        z = z - f/df;
+      } else {     
+        inv_sum = 0.L;
+        for (int k = 0; k < j; k++) {
+          inv_sum += 2.L/(z - roots[k]);
+        }
+        z = z - f/(df - f*inv_sum);
+      }
+      counter++;
+      fprintf(fh, "%4ld\t%26.18LE\t%26.18LE\t%26.18LE\t%26.18LE\t%26.18LE\n", counter, creall(z), cimagl(z), creall(p/df), cimagl(p/df), cabsl(f*inv_sum));
+      if (counter == 200) break;
+    }
+    printf("Root %3d: Iteration %4ld |f| = %14.8LE\n", j, counter, cabsl(f*inv_sum));
+    counter = 0;
+    fclose(fh);
+    residues[j] = p/df;
+    roots[j] = z;
+  }
+  verify_pade(residues, roots, nD);
+  fh = fopen("./roots/roots.txt", "w");
+  fprintf(fh, "# 1. root # 2.-3. z_k 4.-5. g_k\n\n");
+  for (int j = 0; j < nD; j++) {
+    fprintf(fh, "%4d\t%26.18LE\t%26.18LE\t%26.18LE\t%26.18LE\n",j, creall(roots[j]), cimagl(roots[j]), creall(residues[j]), cimagl(residues[j]));
+  }
+  fclose(fh);
+  fftwl_free(residues);
+  fftwl_free(roots);
+}
+
+void verify_pade(fftwl_complex *residues, fftwl_complex *roots, unsigned int nD) {
+   unsigned long 	N = state.number_modes;
+   long double 		overN = 1.L/N, s;
+   long double		tmp = 0.L;
+   
+   fftwl_complex *pade = fftwl_malloc((N-1)*sizeof(fftwl_complex));
+   memset(pade, 0, (N-1)*sizeof(fftwl_complex));
+   for (int k = 0; k < N-1; k++ ) {
+     s = PI*(2.L*(k+1)*overN - 1.L);
+     s = tanl(0.5L*s);
+     for (int j = 0; j < nD; j++) {
+       pade[k] += residues[j]/(s - roots[j]);
+     }
+     tmp += powl(cabsl(W[k]-pade[k]),2); 
+   }
+   tmp = sqrtl(tmp)*overN;
+   pade_complex_out("target.txt", W);
+   pade_complex_out("pade.txt", pade);
+   fftwl_free(pade);
+}

@@ -125,19 +125,16 @@ void convertZtoQ(fftwl_complex *in, fftwl_complex *out) {
   memcpy(tmpc[0], in, N*sizeof(fftwl_complex));
   fftwl_execute(ift0);
   for (long int j = 0; j < N/2; j++) {
-    tmpc[0][j] = -1.0IL*j*tmpc[0][j]*overN;
+    tmpc[0][j] =  -1.0IL*((fftwl_complex)(tmpc[0][j]*j))*overN;
+    tmpc[0][N-1-j] = (fftwl_complex) 0.0L;
   }
   memset(tmpc[0]+N/2, 0, N/2*sizeof(fftwl_complex));
-  printf("tmpc0.txt:\n%23.18LE\t%23.18LE\n", creall(tmpc[0][1]), cimagl(tmpc[0][1]));
-  fftwl_execute(ft0);
-  printf("tmpc0.txt:\n%23.18LE\t%23.18LE\n", creall(tmpc[0][1]), cimagl(tmpc[0][1]));
+  fftwl_execute(ft0); 
   for (long int j = 0; j < N; j++) {
     tmpc[0][j] = (tmpc[0][j]*conf.dq[j] + 1.L)*overN; 
   }
-  exit(1);
   fftwl_execute(ift0);
   inverse(tmpc[0], tmpc[1]);
-  printf("tmpc1.txt:\n%23.19LE\t%23.19LE\n", creall(tmpc[1][1]), cimagl(tmpc[1][1]));
   square_ft(tmpc[1], tmpc[0]);
   fftwl_execute(ft0);
   memcpy(out, tmpc[0], N*sizeof(fftwl_complex));

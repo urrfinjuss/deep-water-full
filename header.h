@@ -1,4 +1,4 @@
-#include <tgmath.h>
+#include <math.h>
 #include <complex.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,9 +8,9 @@
 
 #define MIN(a,b) ((a) < (b) ? a : b)
 
-#define FMODE FFTW_MEASURE
-#define MOVE_MESH 1	// 0 if singularity tracking is off , 1 otherwise
-#define PI acosl(-1.0)
+#define FMODE FFTW_MEASURE	// changed from measure
+#define MOVE_MESH 1		// 0 if singularity tracking is off , 1 otherwise
+#define PI acosl(-1.0L)
 // --------  Structures
 typedef struct input {
   char restart_name[128];		// restart filename 
@@ -106,6 +106,8 @@ extern void compute_rational(unsigned long nD, unsigned long n_max_iter);
 extern void optimal_pade();
 extern void find_l2_error(pade_ptr inp);
 extern void print_pade(pade_ptr inp);
+extern void newton_search(unsigned long nD);
+extern void verify_pade(fftwl_complex *residues, fftwl_complex *roots, unsigned int nD);
 
 // evolve.c
 extern void compute_rhs(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *outQ, fftwl_complex *outV);

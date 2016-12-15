@@ -2,49 +2,49 @@
 
 void real_array_out(char *fname, long double *in) {
   FILE *fh = fopen(fname,"w");
-  long double u, q, overN = 1./state.number_modes;
+  long double u, q, overN = 1.L/state.number_modes;
 
   fprintf(fh, "# 1. q 2. u 3. Array\n\n");
   for (long int j = 0; j < state.number_modes; j++) {
     q = 2.0L*PI*(j*overN - 0.5L) - conf.origin_offset;
     u = conf.image_offset + 2.L*atan2l(conf.scaling*sinl(0.5L*q), cosl(0.5L*q));
-    fprintf(fh, "%.19LE\t%.19LE\t%.19LE\n", q+conf.origin_offset, u, in[j]);
+    fprintf(fh, "%24.17LE\t%24.17LE\t%24.17LE\n", q+conf.origin_offset, u, in[j]);
   }
   fclose(fh);
 }
 void complex_array_out(char *fname, fftwl_complex *in) {
   FILE *fh = fopen(fname,"w");
-  long double u, q, overN = 1./state.number_modes;
+  long double u, q, overN = 1.L/state.number_modes;
 
   fprintf(fh, "# 1. q 2. u 3.-4. Array\n\n");
   for (long int j = 0; j < state.number_modes; j++) {
     q = 2.0L*PI*(j*overN - 0.5L) - conf.origin_offset;
     u = conf.image_offset + 2.L*atan2l(conf.scaling*sinl(0.5L*q), cosl(0.5L*q));
-    fprintf(fh, "%.19LE\t%.19LE\t%.19LE\t%.19LE\n", q+conf.origin_offset, u, creall(in[j]), cimagl(in[j]));
+    fprintf(fh, "%24.17LE\t%24.17LE\t%24.17LE\t%24.17LE\n", q+conf.origin_offset, u, creall(in[j]), cimagl(in[j]));
   }
   fclose(fh);
 }
 
 void spec_out(char *fname, fftwl_complex *in1, fftwl_complex *in2) {
   FILE 		*fh = fopen(fname,"w");
-  long double 	overN = 1./state.number_modes;
+  long double 	overN = 1.L/state.number_modes;
 
   fprintf(fh, "# 1. k 2. |a_k| 3. |b_k|\n\n");
   for (long int j = 0; j < state.number_modes; j++) {
-    fprintf(fh, "%ld\t%.19LE\t%.19LE\n", j, cabsl(in1[j])*overN, cabsl(in2[j])*overN);
+    fprintf(fh, "%ld\t%23.17LE\t%23.17LE\n", j, cabsl(in1[j])*overN, cabsl(in2[j])*overN);
   }
   fclose(fh);
 }
 
 void surface_out(char *fname, fftwl_complex *in) {
   FILE *fh = fopen(fname,"w");
-  long double u, q, overN = 1./state.number_modes;
+  long double u, q, overN = 1.L/state.number_modes;
 
   fprintf(fh, "# 1. x 2. y\n\n");
   for (long int j = 0; j < state.number_modes; j++) {
-    q = 2.0L*PI*(j*overN - 0.5L) - conf.origin_offset;
+    q = 2.0L*PI*(overN*j - 0.5L) - conf.origin_offset;
     u = conf.image_offset + 2.L*atan2l(conf.scaling*sinl(0.5L*q), cosl(0.5L*q));
-    fprintf(fh, "%.19LE\t%.19LE\n", u + creall(in[j]), cimagl(in[j]));
+    fprintf(fh, "%23.17LE\t%23.17LE\n", u + creall(in[j]), cimagl(in[j]));
   }
   fclose(fh);
 }

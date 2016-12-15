@@ -8,8 +8,8 @@ map 		alt_map;
 int main( int argc, char* argv[]) {
   load_parameters(argc, argv);		// read configuration from file	 //
   init_memory();			// initialize memory unit 	 //
-  //init_timemarching();			// initialize timemarching 	 //
-  //init_pade();				// initialize rational approx	 //
+  init_timemarching();			// initialize timemarching 	 //
+  init_pade();				// initialize rational approx	 //
   allocate_memory();			// allocate all memory		 //
 
   unsigned int format_flag = 0;
@@ -53,17 +53,10 @@ int main( int argc, char* argv[]) {
   complex_array_out("q-original.txt", data[0]);
   long double c = 0.5L;
   for (long int j = 0; j < state.number_modes; j++) {
-    //data[1][j] = 1.0IL*c*(1.L - data[0][j]*data[0][j]);
-    data[1][j] = 1.0IL*c*(1.0L - cpowl(data[0][j], 2.L));
-    if (j == 1) {
-      printf("%23.19LE\t%23.19LE\n", creall(data[0][j]), cimagl(data[0][j]));
-      printf("%23.19LE\t%23.19LE\n", creall(1.0IL*c*(1.0L - cpowl(data[0][j], 2.L))), cimagl(1.0IL*c*(1.0L - cpowl(data[0][j], 2.L))));
-    }
-    //data[1][j] = 0.L;
+    data[1][j] = 1.0IL*c*(1.L - data[0][j]*data[0][j]);
   } 
   complex_array_out("v-original.txt", data[1]);
   convertQtoZ(data[0], tmpc[5]);  
-  exit(1); 
   restore_potential(data[0], data[1], tmpc[2]);
   complex_array_out("pre.Phi.ph.txt", tmpc[2]); 
 

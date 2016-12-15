@@ -16,41 +16,40 @@ fftwl_complex 	**data;
 void init_memory() {
   printf("Requesting %lu complex arrays of length %lu\n", n_complex_arrays, state.number_modes);
   printf("Requesting %lu real arrays of length %lu\n", n_real_arrays, state.number_modes);
-  tmpc = fftwl_malloc(n_complex_arrays*sizeof(fftwl_complex *)); 
-  tmpr = fftwl_malloc(n_real_arrays*sizeof(long double *));   
-  data = fftwl_malloc(2*sizeof(fftwl_complex *)); 
+  tmpc = (fftwl_complex **) fftwl_malloc(n_complex_arrays*sizeof(fftwl_complex *)); 
+  tmpr = (long double **) fftwl_malloc(n_real_arrays*sizeof(long double *));   
+  data = (fftwl_complex **) fftwl_malloc(2*sizeof(fftwl_complex *)); 
 }
 
 void allocate_memory() {
+  unsigned long N = state.number_modes;
   for (long int j = 0; j < n_complex_arrays; j++) {
-    tmpc[j] = fftwl_malloc(state.number_modes*sizeof(fftwl_complex));
-    memset(tmpc[j], 0, state.number_modes*sizeof(fftwl_complex));
+    tmpc[j] = (fftwl_complex *) fftwl_malloc(N*sizeof(fftwl_complex));
+    memset(tmpc[j], 0, N*sizeof(fftwl_complex));
   }
   for (long int j = 0; j < n_real_arrays; j++) {
-    tmpr[j] = fftwl_malloc(state.number_modes*sizeof(long double));
-    memset(tmpr[j], 0, state.number_modes*sizeof(long double));
+    tmpr[j] = (long double *) fftwl_malloc(N*sizeof(long double));
+    memset(tmpr[j], 0, N*sizeof(long double));
   }
-  conf.dq =  fftwl_malloc(state.number_modes*sizeof(long double));
-  conf.w =  fftwl_malloc((state.number_modes/2-1)*sizeof(fftwl_complex));
-  aux_array = fftwl_malloc(state.number_modes*sizeof(fftwl_complex));
-  data[0] = fftwl_malloc(state.number_modes*sizeof(fftwl_complex));
-  data[1] = fftwl_malloc(state.number_modes*sizeof(fftwl_complex));
-  //allocate_timemarching();
+  conf.dq = (long double *) fftwl_malloc(N*sizeof(long double));
+  conf.w = (fftwl_complex *) fftwl_malloc((N/2-1)*sizeof(fftwl_complex));
+  aux_array = (fftwl_complex *) fftwl_malloc(N*sizeof(fftwl_complex));
+  data[0] = (fftwl_complex *) fftwl_malloc(N*sizeof(fftwl_complex));
+  data[1] = (fftwl_complex *) fftwl_malloc(N*sizeof(fftwl_complex));
+  allocate_timemarching();
 
-  ft0  = fftwl_plan_dft_1d(state.number_modes, tmpc[0], tmpc[0], FFTW_FORWARD, FMODE);
-  ft1  = fftwl_plan_dft_1d(state.number_modes, tmpc[1], tmpc[1], FFTW_FORWARD, FMODE);
-  ft2  = fftwl_plan_dft_1d(state.number_modes, tmpc[2], tmpc[2], FFTW_FORWARD, FMODE);
-  ft3  = fftwl_plan_dft_1d(state.number_modes, tmpc[3], tmpc[3], FFTW_FORWARD, FMODE);
-  ft4  = fftwl_plan_dft_1d(state.number_modes, tmpc[4], tmpc[4], FFTW_FORWARD, FMODE);
-  ift0 = fftwl_plan_dft_1d(state.number_modes, tmpc[0], tmpc[0], FFTW_BACKWARD, FMODE);
-  ift1 = fftwl_plan_dft_1d(state.number_modes, tmpc[1], tmpc[1], FFTW_BACKWARD, FMODE);
-  ift2 = fftwl_plan_dft_1d(state.number_modes, tmpc[2], tmpc[2], FFTW_BACKWARD, FMODE);
-  ift3 = fftwl_plan_dft_1d(state.number_modes, tmpc[3], tmpc[3], FFTW_BACKWARD, FMODE);
-  ift4 = fftwl_plan_dft_1d(state.number_modes, tmpc[4], tmpc[4], FFTW_BACKWARD, FMODE);
-  memset(data[0], 0, state.number_modes*sizeof(fftwl_complex));
-  memset(data[1], 0, state.number_modes*sizeof(fftwl_complex));
-  for (long int j = 0; j < n_complex_arrays; j++) memset(tmpc[j], 0, state.number_modes*sizeof(fftwl_complex));
-  for (long int j = 0; j < n_real_arrays; j++) memset(tmpr[j], 0, state.number_modes*sizeof(long double));
+  ft0  = fftwl_plan_dft_1d(N, tmpc[0], tmpc[0], FFTW_FORWARD, FMODE);
+  ft1  = fftwl_plan_dft_1d(N, tmpc[1], tmpc[1], FFTW_FORWARD, FMODE);
+  ft2  = fftwl_plan_dft_1d(N, tmpc[2], tmpc[2], FFTW_FORWARD, FMODE);
+  ft3  = fftwl_plan_dft_1d(N, tmpc[3], tmpc[3], FFTW_FORWARD, FMODE);
+  ft4  = fftwl_plan_dft_1d(N, tmpc[4], tmpc[4], FFTW_FORWARD, FMODE);
+  ift0 = fftwl_plan_dft_1d(N, tmpc[0], tmpc[0], FFTW_BACKWARD, FMODE);
+  ift1 = fftwl_plan_dft_1d(N, tmpc[1], tmpc[1], FFTW_BACKWARD, FMODE);
+  ift2 = fftwl_plan_dft_1d(N, tmpc[2], tmpc[2], FFTW_BACKWARD, FMODE);
+  ift3 = fftwl_plan_dft_1d(N, tmpc[3], tmpc[3], FFTW_BACKWARD, FMODE);
+  ift4 = fftwl_plan_dft_1d(N, tmpc[4], tmpc[4], FFTW_BACKWARD, FMODE);
+  //memset(data[0], 0, N*sizeof(fftwl_complex));
+  //memset(data[1], 0, N*sizeof(fftwl_complex));
 }
 
 

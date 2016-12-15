@@ -13,11 +13,11 @@ static const long double 	one_sixteenth 	 = 1.0L/16.0L;
 static const long double 	one_fortyfourths = 1.0L/44.0L;
 static const long double 	one_onetwentieth = 1.0L/120.0L;
 
-
 void init_timemarching() {
   kq = fftwl_malloc(7*sizeof(fftwl_complex *));
   kv = fftwl_malloc(7*sizeof(fftwl_complex *));
 }
+
 void allocate_timemarching() {
   unsigned long 	N = state.number_modes;
   for (long int j = 0; j < 7; j++) {
@@ -73,7 +73,7 @@ void compute_rhs(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *outQ, ff
   //for (long int j = 0; j < N; j++) {
   //  tmpc[3][j]= tmpc[3][j]*overN;
   //}
-  complex_array_out("tmpc2.txt", tmpc[2]);
+  //complex_array_out("tmpc2.txt", tmpc[2]);
   fftwl_execute(ift2);
   fftwl_execute(ift3);
   tmpc[4][0] = 0.L;
@@ -85,9 +85,9 @@ void compute_rhs(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *outQ, ff
     b1U = b1U*w1 + tmpc[2][N/2+1+j];
     b2U = b2U*w2 + tmpc[2][N/2-1-j];
   }
-  printf("b1U = %23.18LE\t%23.18LE\n", creall(b1U), cimagl(b1U));
-  printf("b2U = %23.18LE\t%23.18LE\n", creall(b2U), cimagl(b2U));
-  exit(1);
+  //printf("b1U = %23.18LE\t%23.18LE\n", creall(b1U), cimagl(b1U));
+  //printf("b2U = %23.18LE\t%23.18LE\n", creall(b2U), cimagl(b2U));
+  //exit(1);
   memset(tmpc[2]+N/2, 0, N/2*sizeof(fftwl_complex));
   memset(tmpc[3]+N/2, 0, N/2*sizeof(fftwl_complex));
   memset(tmpc[4]+N/2, 0, N/2*sizeof(fftwl_complex));
@@ -174,16 +174,17 @@ void rk6_step(fftwl_complex *inQ, fftwl_complex *inV, long double dt) {
 }
 
 void evolve_rk6() {
+  unsigned int		QC_pass = 1;
+  unsigned long 	counter = 0, j = 0;
+  char 			filename1[80];
+  char 			filename2[80];
+  long double		M_TOL = 8.0E-16L;
+  long double		R_TOL = 1.0E-16L;
+  long double		tshift = 0.L;
+  long double   	time = 0.L, Ham = 0.L;
+  long double   	dt = cfl*2.L*PI*conf.scaling/state.number_modes;
 
-  unsigned int	QC_pass = 1;
-  unsigned int 	counter = 0, j = 0;
-  char 		filename1[80];
-  char 		filename2[80];
-  long double	tshift = 0.L;
-  long double   time = 0.L, Ham = 0.L;
-  long double   dt = cfl*2.L*PI*conf.scaling/state.number_modes;
-
-  map_quality_fourier(data[0], data[1], 1.0E-15L, &QC_pass);
+  map_quality_fourier(data[0], data[1], M_TOL, &QC_pass);
   if (QC_pass == 0) {
     printf("Bad quality map at start.\tStop!\n");
     exit(1);
@@ -192,21 +193,16 @@ void evolve_rk6() {
   }
   restore_potential(data[0], data[1], tmpc[2]);  
   Ham = (state.kineticE + state.potentialE)/PI;
-  printf("T = %23.18LE\tH = %23.18LE\n", time, Ham);
+  printf("T = %23.16LE\tH = %23.16LE\n", tshift + time, Ham);
   while (QC_pass) {
     rk6_step(data[0], data[1], dt);  
     time = (j+1)*dt;
     j++;
-    restore_potential(data[0], data[1], tmpc[2]);  
-    Ham = (state.kineticE + state.potentialE)/PI;
-    printf("T = %23.18LE\tH = %23.18LE\n", time, Ham);
-    if (j == 1) {
-      complex_array_out("d0.txt", data[0]);
-      complex_array_out("d1.txt", data[1]);
-      exit(1);
-    }
+    //restore_potential(data[0], data[1], tmpc[2]);  
+    //Ham = (state.kineticE + state.potentialE)/PI;
+    //printf("T = %23.18LE\tH = %23.18LE\n", time, Ham);
 
-    map_quality_fourier(data[0], data[1], 1.0E-15L, &QC_pass);
+    map_quality_fourier(data[0], data[1], M_TOL, &QC_pass);
     if (QC_pass == 0) {
       printf("Bad Quality Map.\tTime = %.9LE\nStop!\n", time);
       optimal_pade();
@@ -221,7 +217,7 @@ void evolve_rk6() {
       remap(&alt_map, 2*state.number_modes);
       // Here goes a clever algorithm to choose a better map!
       // End Attempt
-      map_quality_fourier(data[0], data[1], 1.0E-17L, &QC_pass);
+      map_quality_fourier(data[0], data[1], R_TOL, &QC_pass);
       if (QC_pass == 1) {
 	printf("A better map found.\n");
 	printf("Resume evolution from T = %13.9LE\n", time + tshift);
@@ -229,6 +225,8 @@ void evolve_rk6() {
         Ham = (state.kineticE + state.potentialE)/PI;
         printf("T = %23.18LE\tH = %23.18LE\n", time + tshift, Ham);
         tshift += time;
+        j = 0;
+     	dt = cfl*2.L*PI*conf.scaling/state.number_modes;
       } else {
 	printf("Failed to find a good map!\n");
 	exit(1);
@@ -236,14 +234,14 @@ void evolve_rk6() {
     } else {
       if ( !((j+1) % 40) ) {
         counter++;
-        sprintf(filename2, "./data/spec_%04u.txt", counter);
+        sprintf(filename2, "./data/spec_%04lu.txt", counter);
         spec_out(filename2, tmpc[0], tmpc[1]);
         convertQtoZ(data[0], tmpc[5]);
-        sprintf(filename1, "./data/surf_%04u.txt", counter);
+        sprintf(filename1, "./data/surf_%04lu.txt", counter);
         surface_out(filename1, tmpc[5]);
         restore_potential(data[0], data[1], tmpc[2]);  
         Ham = (state.kineticE + state.potentialE)/PI;
-        printf("T = %23.18LE\tH = %23.18LE\n", time, Ham);
+        printf("T = %23.16LE\tH = %23.16LE\n", tshift + time, Ham);
       }
     }
   }
