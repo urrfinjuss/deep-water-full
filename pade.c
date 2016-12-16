@@ -1,8 +1,11 @@
 #include "header.h"
+#include <quadmath.h>
 
 //static fftwl_complex *coeffQ, *coeffP;
 static long double *M, *Ens;
+//static __float128 *M2, *Ens2;
 static fftwl_complex *arrayQ,  *arrayP;
+//static __complex128 *arrayQ2, *arrayP2;
 static fftwl_complex **A, **B;
 //static fftwl_complex **C, **D;
 static fftwl_complex *W, *tmp;
@@ -319,12 +322,15 @@ void find_l2_error(pade_ptr inp){
 }
 
 
+
+
 void evaluate_poly(fftwl_complex *in, unsigned long nD, fftwl_complex *outQ, fftwl_complex *outQp, fftwl_complex *outP){
   fftwl_complex  	tmp_C, tmp_B, tmp_A;
   fftwl_complex		P[4], Q[4], dQ[4];
   fftwl_complex		s;
    
-  s = ctanl(0.5L*(*in));
+  //s = ctanl(0.5L*(*in));
+  s = *in;
   P[0] = 0.L;
   dQ[0] = 0.L;
   Q[0] = 1.L;
@@ -372,11 +378,16 @@ void newton_search(unsigned long nD) {
   long int counter = 0;
   char str[80];
   FILE *fh;
+  
+  z = 0.L;
+  evaluate_poly(&z, nD, &f, &df, &p);
+  //printf("At s = 0: f(0) = %.18LE\t%.18LE\n", creall(p/f), cimagl(p/f));
+  //exit(1);
 
   for (int j = 0; j < nD; j++) {  
     sprintf(str, "./roots/root_%03d.txt", j);
     fh = fopen(str, "w");
-    z = 1.0L+0.5IL;
+    z = 0.5IL;
     f = 1.L; 
     inv_sum = 1.L;
     while ( cabsl(f*inv_sum) > 5.0E-29L) {
@@ -387,13 +398,13 @@ void newton_search(unsigned long nD) {
       } else {     
         inv_sum = 0.L;
         for (int k = 0; k < j; k++) {
-          inv_sum += 2.L/(z - roots[k]);
+          inv_sum += 1.L/(z - roots[k]);
         }
         z = z - f/(df - f*inv_sum);
       }
       counter++;
       fprintf(fh, "%4ld\t%26.18LE\t%26.18LE\t%26.18LE\t%26.18LE\t%26.18LE\n", counter, creall(z), cimagl(z), creall(p/df), cimagl(p/df), cabsl(f*inv_sum));
-      if (counter == 200) break;
+      if (counter == 512) break;
     }
     printf("Root %3d: Iteration %4ld |f| = %14.8LE\n", j, counter, cabsl(f*inv_sum));
     counter = 0;
@@ -412,23 +423,123 @@ void newton_search(unsigned long nD) {
   fftwl_free(roots);
 }
 
+void aberth_iter(unsigned int nD) {
+  fftwl_complex *rts = fftwl_malloc(nD*sizeof(fftwl_complex));
+  //fftwl_complex *res = fftwl_malloc(nD*sizeof(fftwl_complex));
+  fftwl_complex *wk = fftwl_malloc(nD*sizeof(fftwl_complex));
+
+  FILE *fh = fopen("roots_000.txt","w");
+  for (int j = 0; j < nD; j++) {
+    rts[j] = 1.25IL + 0.25IL*cexpl(2.L*PI*(j+0.5L)/nD);
+    wk[j] = 0.L;
+    fprintf(fh, "%3d\t%.12LE\t%.12LE\n", j, creall(rts[j]), cimagl(rts[j]));
+  }
+  fclose(fh);
+ 
+  for (int k = 0; k < 10; k++) {
+    
+    //poly_val_array(rts, nD, tmp_Q, tmp_Qp, tmp_P);
+    printf("Aberth iteration %3d: \n", k);
+  }
+
+
+
+}
+
 void verify_pade(fftwl_complex *residues, fftwl_complex *roots, unsigned int nD) {
    unsigned long 	N = state.number_modes;
    long double 		overN = 1.L/N, s;
-   long double		tmp = 0.L;
+   long double		tmp_1 = 0.L;
+   long double		tmp_2 = 0.L;
    
    fftwl_complex *pade = fftwl_malloc((N-1)*sizeof(fftwl_complex));
+   fftwl_complex *rat  = fftwl_malloc((N-1)*sizeof(fftwl_complex));
    memset(pade, 0, (N-1)*sizeof(fftwl_complex));
    for (int k = 0; k < N-1; k++ ) {
      s = PI*(2.L*(k+1)*overN - 1.L);
      s = tanl(0.5L*s);
+     rat[k] = arrayP[k]/arrayQ[k];
      for (int j = 0; j < nD; j++) {
        pade[k] += residues[j]/(s - roots[j]);
      }
-     tmp += powl(cabsl(W[k]-pade[k]),2); 
+     tmp_1 += powl(cabsl(W[k] - pade[k]),2); 
+     tmp_2 += powl(cabsl(W[k] - arrayP[k]/arrayQ[k]),2);
    }
-   tmp = sqrtl(tmp)*overN;
+   tmp_1 = sqrtl(tmp_1)*overN;
+   tmp_2 = sqrtl(tmp_2)*overN;
+   printf("Rat. Approx L2 error:\t%.18LE\n", tmp_2);
+   printf("Pole Approx L2 error:\t%.18LE\n", tmp_1);
    pade_complex_out("target.txt", W);
+   pade_complex_out("rational.txt", W);
    pade_complex_out("pade.txt", pade);
+   fftwl_free(rat);
    fftwl_free(pade);
+}
+
+
+
+void poly_val_array(fftwl_complex *in, unsigned long nD, fftwl_complex *outQ, fftwl_complex *outQp, fftwl_complex *outP){
+  fftwl_complex  	*tmp_C, *tmp_B, *tmp_A;
+  fftwl_complex		*P[4], *Q[4], *dQ[4];
+  fftwl_complex		*s;
+
+  tmp_A = fftwl_malloc(nD*sizeof(fftwl_complex));
+  tmp_B = fftwl_malloc(nD*sizeof(fftwl_complex));
+  tmp_C = fftwl_malloc(nD*sizeof(fftwl_complex));
+  for (int j = 0; j < 4; j++) {
+    P[j] = fftwl_malloc(nD*sizeof(fftwl_complex));
+    Q[j] = fftwl_malloc(nD*sizeof(fftwl_complex));
+    dQ[j] = fftwl_malloc(nD*sizeof(fftwl_complex));
+  }
+  s = fftwl_malloc(nD*sizeof(fftwl_complex));
+
+  for (int j = 0; j < nD; j++) {
+    //s[j] = ctanl(0.5L*in[j]);
+    s[j] = in[j];
+    P[0][j] = 0.L;
+    Q[0][j] = 1.L;
+    dQ[0][j] = 0.L;
+
+    P[1][j] = -1.L;
+    Q[1][j] = -Cees[0][1];
+    dQ[1][j] = 0.L;
+
+    P[2][j]  = s[j]*P[0][j] - Cees[0][2]*P[1][j] - Cees[1][2]*P[0][j];
+    Q[2][j]  = s[j]*Q[0][j] - Cees[0][2]*Q[1][j] - Cees[1][2]*Q[0][j];
+    dQ[2][j] = Q[0][j] + s[j]*dQ[0][j] - Cees[0][2]*dQ[1][j] - Cees[1][2]*dQ[0][j];
+
+    P[3][j]  = s[j]*P[1][j] - Cees[0][3]*P[2][j] - Cees[1][3]*P[1][j] - Cees[2][3]*P[0][j];
+    Q[3][j]  = s[j]*Q[1][j] - Cees[0][3]*Q[2][j] - Cees[1][3]*Q[1][j] - Cees[2][3]*Q[0][j];
+    dQ[3][j] = Q[1][j] + s[j]*dQ[1][j] - Cees[0][3]*dQ[2][j] - Cees[1][3]*dQ[1][j] - Cees[2][3]*dQ[0][j];
+    for (unsigned long k = 4; k < 2*nD + 1; k++) {
+      tmp_C[j] = s[j]*P[2][j] - Cees[0][k]*P[3][j] - Cees[1][k]*P[2][j] - Cees[2][k]*P[1][j] - Cees[3][k]*P[0][j];
+      tmp_B[j] = s[j]*Q[2][j] - Cees[0][k]*Q[3][j] - Cees[1][k]*Q[2][j] - Cees[2][k]*Q[1][j] - Cees[3][k]*Q[0][j];
+      tmp_A[j] = Q[2][j] + s[j]*dQ[2][j] - Cees[0][k]*dQ[3][j] - Cees[1][k]*dQ[2][j] - Cees[2][k]*dQ[1][j] - Cees[3][k]*dQ[0][j];
+      P[0][j] = P[1][j];
+      P[1][j] = P[2][j];
+      P[2][j] = P[3][j];
+      P[3][j] = tmp_C[j];
+      Q[0][j] = Q[1][j];
+      Q[1][j] = Q[2][j];
+      Q[2][j] = Q[3][j];
+      Q[3][j] = tmp_B[j];
+      dQ[0][j] = dQ[1][j];
+      dQ[1][j] = dQ[2][j];
+      dQ[2][j] = dQ[3][j];
+      dQ[3][j] = tmp_A[j]; 
+    } 
+    outP[j]  = P[3][j];  
+    outQ[j]  = Q[3][j];
+    outQp[j] = dQ[3][j];
+  }
+  
+  fftwl_free(tmp_A);
+  fftwl_free(tmp_B);
+  fftwl_free(tmp_C);
+  for (int j = 3; j > -1; j--) {
+    fftwl_free(P[j]);
+    fftwl_free(Q[j]);
+    fftwl_free(dQ[j]);
+  }
+  fftwl_free(s);
 }

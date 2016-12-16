@@ -6,16 +6,17 @@ C_FSW   = main.c memory.c array_func.c input.c output.c mapping.c hlevel.c evolv
 # Compilers -Ofast -ffast-math -mfpmath=387
 CC      = gcc
 LINK    = gcc
-OPT     = -std=gnu99 -Wall -Wpointer-arith -Wcast-align -fno-schedule-insns -fschedule-insns2 -fstrict-aliasing -funroll-loops -fprefetch-loop-arrays
+OPT     = -std=gnu99 -Ofast -ffast-math -mfpmath=sse+387 -flto -Wall -Wpointer-arith -Wcast-align -fno-schedule-insns -fschedule-insns2 -fstrict-aliasing -funroll-loops -fprefetch-loop-arrays
 #OPT	= -march=native -O -fno-inline -Wall -std=gnu99
+#OPT	= -std=gnu99 -mfpmath=387 -Wall
 
 #-----------------------------
 #generic
 
 LIB_MPI         =
-LIB_FFT         = -L/home/orange/fftw3libd/lib  -lfftw3l_threads -lfftw3l -lm -lpthread
+LIB_FFT         = -L/home/orange/usr/lib  -lfftw3l_threads -lfftw3l -lm -lpthread -lquadmath
 INC_MPI         =
-INC_FFT         = -I/home/orange/fftw3libd/include
+INC_FFT         = -I/home/orange/usr/include
 LIB_ADD         =
 
 #-----------------------------
