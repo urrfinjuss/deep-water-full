@@ -212,9 +212,9 @@ void evolve_rk6() {
       print_constants();
       printf("Attemptng to fix the map.\n");
       // Attempt to fix the conformal map
-      track_singularity(data[0]);
-      alt_map.scaling = conf.scaling/sqrtl(2.0L);
-      remap(&alt_map, 2*state.number_modes);
+      //track_singularity(data[0]);
+      //alt_map.scaling = conf.scaling/sqrtl(2.0L);
+      remap(&alt_map, state.number_modes);
       // Here goes a clever algorithm to choose a better map!
       // End Attempt
       map_quality_fourier(data[0], data[1], R_TOL, &QC_pass);

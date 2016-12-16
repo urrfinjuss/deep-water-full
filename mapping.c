@@ -22,7 +22,6 @@ void set_mapping() {
     long double q = 2.L*PI*(1.0L*j*overN - 0.5L);
     conf.dq[j] = b*(1.0L + a*cosl(q - conf.origin_offset));
   }
-  printf("Digits of Pie: %23.18LE\n", PI);
 }
 
 void remap(map_ptr new_map, unsigned long int N) {

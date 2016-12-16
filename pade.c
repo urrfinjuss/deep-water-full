@@ -284,7 +284,8 @@ void optimal_pade() {
       best_pade.n_poles = nd;
       pade_data.n_lins = 0;
       compute_rational(nd, l_iters);
-      newton_search(nd);
+      aberth_iter(nd);
+      //newton_search(nd);
       deallocate_pade();
       best_pade.l2_rel_err = pade_data.l2_rel_err;
       best_pade.l2_abs_err = pade_data.l2_abs_err;
@@ -296,7 +297,7 @@ void optimal_pade() {
     } 
   }
   fclose(fh);
-  exit(1);
+  //exit(1);
 }
 
 void print_pade(pade_ptr inp) { 
@@ -425,25 +426,99 @@ void newton_search(unsigned long nD) {
 
 void aberth_iter(unsigned int nD) {
   fftwl_complex *rts = fftwl_malloc(nD*sizeof(fftwl_complex));
-  //fftwl_complex *res = fftwl_malloc(nD*sizeof(fftwl_complex));
+  fftwl_complex *res = fftwl_malloc(nD*sizeof(fftwl_complex));
+  fftwl_complex *t1 = fftwl_malloc(nD*sizeof(fftwl_complex));
+  fftwl_complex *t2 = fftwl_malloc(nD*sizeof(fftwl_complex));
   fftwl_complex *wk = fftwl_malloc(nD*sizeof(fftwl_complex));
+  fftwl_complex *invC = fftwl_malloc(nD*sizeof(fftwl_complex));
+  fftwl_complex tmp_r;
+  char str[80];
+  long int    counter = 0, k = 0;
+  long double nrm = 1.L;;
 
-  FILE *fh = fopen("roots_000.txt","w");
+  FILE *fh;
   for (int j = 0; j < nD; j++) {
-    rts[j] = 1.25IL + 0.25IL*cexpl(2.L*PI*(j+0.5L)/nD);
+    rts[j] = 1.25IL + 0.25IL*cexpl(2.IL*PI*(j+0.5L)/nD);
     wk[j] = 0.L;
-    fprintf(fh, "%3d\t%.12LE\t%.12LE\n", j, creall(rts[j]), cimagl(rts[j]));
+  }
+  //for (int k = 0; k < 40; k++) {
+  while (nrm > 5.E-28L) {
+    poly_val_array(rts, nD, t1, t2, res);
+    nrm = 0.L;
+    for (int n = 0; n < nD; n++) {
+      nrm += cabsl(t1[n])*cabsl(t1[n]);
+    }
+    nrm = sqrtl(nrm);
+    for (int j = 0; j < nD; j++) {
+      tmp_r = t1[j]/t2[j]; 
+      invC[j] = 0.L;
+      for (int l = 0; l < nD; l++) {
+        if (j != l) {
+          invC[j] += 1.L/(rts[j] - rts[l]);
+        }
+      }
+      wk[j] = - 1.L*tmp_r/(1.L - tmp_r*invC[j]);
+      rts[j] += wk[j];
+    }
+    if ((k % 4) == 0) {
+      sprintf(str, "./roots/roots_%03ld.txt", counter);
+      fh = fopen(str,"w");
+      for (int j = 0; j < nD; j++) {
+        fprintf(fh, "%3d\t%.12LE\t%.12LE\n", j, creall(2.L*catanl(rts[j])), cimagl(2.L*catanl(rts[j])));
+      }
+      fclose(fh);
+      counter++;
+      printf("Aberth iteration %3ld: %.12LE\n", k, nrm);
+    }
+    k++;
+    if ( k == 120) break;
+  }
+  poly_val_array(rts, nD, t1, t2, res);
+  nrm = 0.L;
+  for (int j = 0; j < nD; j++) {
+    res[j] = res[j]/t2[j];
+    nrm += cabsl(t1[j])*cabsl(t1[j]);
+  }
+  sort_by_imag(rts, res, nD);
+  sprintf(str, "./roots/roots_%03ld.txt", counter);
+  fh = fopen(str,"w");
+  for (int j = 0; j < nD; j++) {
+    fprintf(fh, "%3d\t%.12LE\t%.12LE\n", j, creall(2.L*catanl(rts[j])), cimagl(2.L*catanl(rts[j])));
   }
   fclose(fh);
- 
-  for (int k = 0; k < 10; k++) {
-    
-    //poly_val_array(rts, nD, tmp_Q, tmp_Qp, tmp_P);
-    printf("Aberth iteration %3d: \n", k);
+  nrm = sqrtl(nrm);
+  printf("Aberth iteration %3ld: %.12LE\n", k, nrm);
+  verify_pade(res, rts, nD);
+  printf("Closest singularity is at Re q = %.12LE\tIm q = %.12LE\n", creall(2.L*catanl(rts[0])), cimagl(2.L*catanl(rts[0])));
+  alt_map.scaling = sqrtl(cimagl(rts[0]));
+  alt_map.origin_offset = creall(rts[0]);
+  alt_map.image_offset = 2.0L*atan2l(alt_map.scaling*sinl(0.5L*alt_map.origin_offset), cosl(0.5L*alt_map.origin_offset));
+  fftwl_free(rts);
+  fftwl_free(res);
+  fftwl_free(t1);
+  fftwl_free(t2);
+  fftwl_free(wk);
+  fftwl_free(invC);
+}
+void sort_by_imag(fftwl_complex *in1, fftwl_complex *in2, unsigned int nD) {
+  fftwl_complex tmp1, tmp2;
+  unsigned int n2 = nD, swapped;
+  while (1) {
+    swapped = 0;
+    for (int j = 1; j < n2; j++) {
+      if (cimagl(catanl(in1[j-1])) > cimagl(catanl(in1[j]))) {
+        tmp1 = in1[j];
+        tmp2 = in2[j];
+        in1[j] = in1[j-1];
+        in2[j] = in2[j-1];
+        in1[j-1] = tmp1;
+        in2[j-1] = tmp2;
+	swapped = 1;
+      }
+    }
+    n2 = n2 - 1;
+    if (!swapped) break;
   }
-
-
-
 }
 
 void verify_pade(fftwl_complex *residues, fftwl_complex *roots, unsigned int nD) {

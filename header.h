@@ -108,6 +108,9 @@ extern void find_l2_error(pade_ptr inp);
 extern void print_pade(pade_ptr inp);
 extern void newton_search(unsigned long nD);
 extern void verify_pade(fftwl_complex *residues, fftwl_complex *roots, unsigned int nD);
+extern void poly_val_array(fftwl_complex *in, unsigned long nD, fftwl_complex *outQ, fftwl_complex *outQp, fftwl_complex *outP);
+extern void aberth_iter(unsigned int nD);
+extern void sort_by_imag(fftwl_complex *in1, fftwl_complex *in2, unsigned int nD);
 
 // evolve.c
 extern void compute_rhs(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *outQ, fftwl_complex *outV);
