@@ -109,7 +109,7 @@ void convertQtoZ(fftwl_complex *in, fftwl_complex *out) {
   }
   mean_level = 2.L*PI*(S0 + mean_level);
   P += creall(tmpc[4][0]*conjl(tmpc[1][0]));
-  state.potentialE = 2.L*PI*P;
+  state.potentialE = 2.L*PI*state.gravity*P;
   state.mean_level = mean_level;
 }
 

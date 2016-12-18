@@ -257,13 +257,13 @@ void compute_rational(unsigned long nD, unsigned long n_max_iter) {
   //exit(1);
 }
 
-void optimal_pade() {
-  FILE *fh = fopen("pc_rate.txt","w");
-  unsigned long nd = 1, l_iters = 8;
+void optimal_pade(char *str) {
+//  FILE *fh = fopen("pc_rate.txt","w");
+  unsigned long nd = 2, l_iters = 8;
   pade best_pade;  
   best_pade.l2_rel_err = 1.L;
   
-  fprintf(fh, "# 1. nD, number poles 2. Error\n\n");
+  //fprintf(fh, "# 1. nD, number poles 2. Error\n\n");
   //for (unsigned int nd = 1; nd < 32; nd++) {
   while (nd < 32) {
     nd++;
@@ -278,14 +278,19 @@ void optimal_pade() {
       best_pade.n_poles = nd;
       best_pade.n_lins = l_iters;
       printf("Relative Error (nd = %3lu) = %11.5LE\n", nd, best_pade.l2_rel_err);
-      fprintf(fh, "%.3lu\t%11.5LE\n", nd, best_pade.l2_rel_err);
+      //fprintf(fh, "%.3lu\t%11.5LE\n", nd, best_pade.l2_rel_err);
     } else {
-      nd = nd-2;
+      nd = nd-3;
       best_pade.n_poles = nd;
       pade_data.n_lins = 0;
       compute_rational(nd, l_iters);
-      aberth_iter(nd);
+      aberth_iter(nd, str);
       //newton_search(nd);
+      // set new map parameters
+      alt_map.image_offset = 0.L;
+      alt_map.origin_offset = 0.L;
+      alt_map.scaling = conf.scaling/sqrtl(2.0L);
+      // end set
       deallocate_pade();
       best_pade.l2_rel_err = pade_data.l2_rel_err;
       best_pade.l2_abs_err = pade_data.l2_abs_err;
@@ -296,7 +301,7 @@ void optimal_pade() {
       break;
     } 
   }
-  fclose(fh);
+  //fclose(fh);
   //exit(1);
 }
 
@@ -424,7 +429,7 @@ void newton_search(unsigned long nD) {
   fftwl_free(roots);
 }
 
-void aberth_iter(unsigned int nD) {
+void aberth_iter(unsigned int nD, char *str) {
   fftwl_complex *rts = fftwl_malloc(nD*sizeof(fftwl_complex));
   fftwl_complex *res = fftwl_malloc(nD*sizeof(fftwl_complex));
   fftwl_complex *t1 = fftwl_malloc(nD*sizeof(fftwl_complex));
@@ -432,7 +437,7 @@ void aberth_iter(unsigned int nD) {
   fftwl_complex *wk = fftwl_malloc(nD*sizeof(fftwl_complex));
   fftwl_complex *invC = fftwl_malloc(nD*sizeof(fftwl_complex));
   fftwl_complex tmp_r;
-  char str[80];
+  //char str[80];
   long int    counter = 0, k = 0;
   long double nrm = 1.L;;
 
@@ -460,13 +465,13 @@ void aberth_iter(unsigned int nD) {
       wk[j] = - 1.L*tmp_r/(1.L - tmp_r*invC[j]);
       rts[j] += wk[j];
     }
-    if ((k % 4) == 0) {
-      sprintf(str, "./roots/roots_%03ld.txt", counter);
+    if ((k % 20) == 0) {
+      /*sprintf(str, "./roots/roots_%03ld.txt", counter);
       fh = fopen(str,"w");
       for (int j = 0; j < nD; j++) {
         fprintf(fh, "%3d\t%.12LE\t%.12LE\n", j, creall(2.L*catanl(rts[j])), cimagl(2.L*catanl(rts[j])));
       }
-      fclose(fh);
+      fclose(fh);*/
       counter++;
       printf("Aberth iteration %3ld: %.12LE\n", k, nrm);
     }
@@ -480,8 +485,9 @@ void aberth_iter(unsigned int nD) {
     nrm += cabsl(t1[j])*cabsl(t1[j]);
   }
   sort_by_imag(rts, res, nD);
-  sprintf(str, "./roots/roots_%03ld.txt", counter);
+  //sprintf(str, "./roots/roots.txt");
   fh = fopen(str,"w");
+  fprintf(fh, "# 1. pole # 2.-3. z_k 4.-5. gamma_k\n# Time = %.12LE\n\n", state.time);
   for (int j = 0; j < nD; j++) {
     fprintf(fh, "%3d\t%.12LE\t%.12LE\n", j, creall(2.L*catanl(rts[j])), cimagl(2.L*catanl(rts[j])));
   }
@@ -489,10 +495,13 @@ void aberth_iter(unsigned int nD) {
   nrm = sqrtl(nrm);
   printf("Aberth iteration %3ld: %.12LE\n", k, nrm);
   verify_pade(res, rts, nD);
-  printf("Closest singularity is at Re q = %.12LE\tIm q = %.12LE\n", creall(2.L*catanl(rts[0])), cimagl(2.L*catanl(rts[0])));
-  alt_map.scaling = sqrtl(cimagl(rts[0]));
-  alt_map.origin_offset = creall(rts[0]);
-  alt_map.image_offset = 2.0L*atan2l(alt_map.scaling*sinl(0.5L*alt_map.origin_offset), cosl(0.5L*alt_map.origin_offset));
+  //printf("Closest singularity is at Re q = %.12LE\tIm q = %.12LE\n", creall(2.L*catanl(rts[0])), cimagl(2.L*catanl(rts[0])));
+  //alt_map.scaling = sqrtl(cimagl(rts[0]));
+  //alt_map.scaling = conf.scaling/sqrtl(2.L);
+  //sqrtl(conf.scaling*cimagl(2.L*catanl(rts[0])));
+  //alt_map.origin_offset = creall(2.L*catanl(rts[0]));
+  //alt_map.image_offset = 2.0L*atan2l(sinl(0.5L*alt_map.origin_offset), alt_map.scaling*cosl(0.5L*alt_map.origin_offset));
+
   fftwl_free(rts);
   fftwl_free(res);
   fftwl_free(t1);
@@ -500,6 +509,8 @@ void aberth_iter(unsigned int nD) {
   fftwl_free(wk);
   fftwl_free(invC);
 }
+
+
 void sort_by_imag(fftwl_complex *in1, fftwl_complex *in2, unsigned int nD) {
   fftwl_complex tmp1, tmp2;
   unsigned int n2 = nD, swapped;

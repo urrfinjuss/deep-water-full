@@ -4,7 +4,9 @@
 static fftwl_complex 	**kq, *tQ;
 static fftwl_complex 	**kv, *tV;
 
-static const long double	cfl		 = 0.125L;
+static long double	cfl = 0.100L;
+static unsigned long    kz;
+static const unsigned long 	pD = 12;
 static const long double 	one_third        = 1.0L/3.0L;
 static const long double 	two_thirds       = 2.0L/3.0L;
 static const long double 	one_twelfth      = 1.0L/12.0L;
@@ -16,6 +18,10 @@ static const long double 	one_onetwentieth = 1.0L/120.0L;
 void init_timemarching() {
   kq = fftwl_malloc(7*sizeof(fftwl_complex *));
   kv = fftwl_malloc(7*sizeof(fftwl_complex *));
+  state.kD = lroundl((9.L/10.L)*state.number_modes/2.L);  // was 3/8
+  kz = lroundl(7.L/6.L*state.kD);
+  if (kz > state.number_modes/2) kz = state.number_modes/2;
+  printf("Dissipative Range starts at k0 = %lu\n", state.kD);
 }
 
 void allocate_timemarching() {
@@ -24,6 +30,11 @@ void allocate_timemarching() {
     kq[j] = fftwl_malloc(N*sizeof(fftwl_complex));
     kv[j] = fftwl_malloc(N*sizeof(fftwl_complex));
   }
+  state.kD = lroundl((9.L/10.L)*state.number_modes/2.L);  // was 3/8
+  kz = lroundl(7.L/6.L*state.kD);
+  if (kz > state.number_modes/2) kz = state.number_modes/2;
+  printf("New Dissipative Range starts at k0 = %lu\n", state.kD);
+  printf("New Zero Range starts at k0 = %lu\n", kz);
   tQ = fftwl_malloc(N*sizeof(fftwl_complex));
   tV = fftwl_malloc(N*sizeof(fftwl_complex));
 }
@@ -123,8 +134,8 @@ void rk6_step(fftwl_complex *inQ, fftwl_complex *inV, long double dt) {
 
   memcpy(tQ, inQ, N*sizeof(fftwl_complex)); 
   memcpy(tV, inV, N*sizeof(fftwl_complex)); 
-  complex_array_out("inV.txt", inV);
-  complex_array_out("inQ.txt", inQ);
+  //complex_array_out("inV.txt", inV);
+  //complex_array_out("inQ.txt", inQ);
 
   compute_rhs(tQ, tV, kq[0], kv[0]);
   for (long int j = 0; j < N; j++) {
@@ -167,6 +178,14 @@ void rk6_step(fftwl_complex *inQ, fftwl_complex *inV, long double dt) {
   fftwl_execute(ift1);
   memset(tmpc[0]+N/2, 0, N/2*sizeof(fftwl_complex));
   memset(tmpc[1]+N/2, 0, N/2*sizeof(fftwl_complex));
+  for (long int j = 0; j < N/2; j++) {
+    tmpc[0][j] = tmpc[0][j]*cexpl(-1.L*powl(1.L*j/state.kD, pD)); // dt
+    tmpc[1][j] = tmpc[1][j]*cexpl(-1.L*powl(1.L*j/state.kD, pD)); // dt
+    if (j >= kz) {
+      tmpc[0][j] = 0.L;
+      tmpc[1][j] = 0.L;
+    }
+  }
   fftwl_execute(ft0);
   fftwl_execute(ft1); 
   memcpy(inQ, tmpc[0], N*sizeof(fftwl_complex));
@@ -175,16 +194,17 @@ void rk6_step(fftwl_complex *inQ, fftwl_complex *inV, long double dt) {
 
 void evolve_rk6() {
   unsigned int		QC_pass = 1;
-  unsigned long 	counter = 0, j = 0;
+  unsigned long 	counter = 0, j = 0, skip = 64;
+  unsigned long		ref_counter = 0;
   char 			filename1[80];
   char 			filename2[80];
-  long double		M_TOL = 8.0E-16L;
-  long double		R_TOL = 1.0E-16L;
+  long double		M_TOL = 1.0E-14L;
+  long double		R_TOL = 2.0E-15L;
   long double		tshift = 0.L;
   long double   	time = 0.L, Ham = 0.L;
   long double   	dt = cfl*2.L*PI*conf.scaling/state.number_modes;
 
-  map_quality_fourier(data[0], data[1], M_TOL, &QC_pass);
+  map_quality_fourier(data[0], data[1], M_TOL*sqrtl(state.number_modes/4096.L), &QC_pass);
   if (QC_pass == 0) {
     printf("Bad quality map at start.\tStop!\n");
     exit(1);
@@ -198,41 +218,53 @@ void evolve_rk6() {
     rk6_step(data[0], data[1], dt);  
     time = (j+1)*dt;
     j++;
+    state.time = time + tshift;
     //restore_potential(data[0], data[1], tmpc[2]);  
     //Ham = (state.kineticE + state.potentialE)/PI;
     //printf("T = %23.18LE\tH = %23.18LE\n", time, Ham);
 
-    map_quality_fourier(data[0], data[1], M_TOL, &QC_pass);
+    map_quality_fourier(data[0], data[1], M_TOL*sqrtl(state.number_modes/4096.L), &QC_pass);
     if (QC_pass == 0) {
-      printf("Bad Quality Map.\tTime = %.9LE\nStop!\n", time);
-      optimal_pade();
-      //compute_rational(14, 16);
+      //printf("Bad Quality Map.\tTime = %.9LE\nStop!\n", time);
+      ref_counter++;
+      sprintf(filename2, "./roots/roots_%04lu.txt", ref_counter);
+      optimal_pade(filename2);
       spec_out("last.spec.txt", tmpc[0], tmpc[1]);
       restore_potential(data[0], data[1], tmpc[2]);
-      print_constants();
-      printf("Attemptng to fix the map.\n");
+      //print_constants();
+      //printf("Attemptng to fix the map.\n");
       // Attempt to fix the conformal map
-      //track_singularity(data[0]);
-      //alt_map.scaling = conf.scaling/sqrtl(2.0L);
       remap(&alt_map, state.number_modes);
-      // Here goes a clever algorithm to choose a better map!
-      // End Attempt
-      map_quality_fourier(data[0], data[1], R_TOL, &QC_pass);
+      restore_potential(data[0], data[1], tmpc[2]);
+      //print_constants();
+      map_quality_fourier(data[0], data[1], R_TOL*sqrtl(state.number_modes/4096.L), &QC_pass);
+      if (QC_pass == 0) {
+        printf("Doubling # of Modes: %lu\n", 2*state.number_modes);
+        remap(&alt_map, 2*state.number_modes);
+        skip = lroundl(1.5L*skip);
+        //state.number_modes = 2*state.number_modes; 
+        restore_potential(data[0], data[1], tmpc[2]);
+        print_constants();
+        map_quality_fourier(data[0], data[1], R_TOL*sqrtl(state.number_modes/4096.L), &QC_pass);
+      }
       if (QC_pass == 1) {
-	printf("A better map found.\n");
-	printf("Resume evolution from T = %13.9LE\n", time + tshift);
+	//printf("A better map found.\n");
+	//printf("Resume evolution from T = %13.9LE\n", time + tshift);
         restore_potential(data[0], data[1], tmpc[2]);  
         Ham = (state.kineticE + state.potentialE)/PI;
-        printf("T = %23.18LE\tH = %23.18LE\n", time + tshift, Ham);
+        printf("T = %23.16LE\tH = %23.16LE\n", tshift + time, Ham);
         tshift += time;
         j = 0;
+        cfl = 0.98L*cfl;
      	dt = cfl*2.L*PI*conf.scaling/state.number_modes;
+        skip = lroundl(sqrtl(1.5L)*skip);
       } else {
 	printf("Failed to find a good map!\n");
+        complex_array_out("finalQ.txt", data[0]);
 	exit(1);
       }
     } else {
-      if ( !((j+1) % 40) ) {
+      if ( !((j+1) % skip) ) {
         counter++;
         sprintf(filename2, "./data/spec_%04lu.txt", counter);
         spec_out(filename2, tmpc[0], tmpc[1]);

@@ -23,10 +23,12 @@ typedef struct input {
   long double kineticE;			// kinetic energy
   long double potentialE;		// potential energy
   long double final_time;		// simulation time
+  long double time;			// stores current time
   fftwl_complex momentum;		// momentum P = px + i*py
   unsigned long int refinement_counter;	// refinement counter
   unsigned long int number_poles;	// number of poles
   unsigned long int number_modes;	// number of grid points
+  unsigned long int kD;			// hyperV scale, set in evolve.c
 } params, *params_ptr;
 
 typedef struct conformal_mapping {
@@ -103,13 +105,13 @@ extern void allocate_pade(unsigned long nD);
 extern void deallocate_pade();
 extern void pade_array_out(char *fname, fftwl_complex *in);
 extern void compute_rational(unsigned long nD, unsigned long n_max_iter);
-extern void optimal_pade();
+extern void optimal_pade(char *str);
 extern void find_l2_error(pade_ptr inp);
 extern void print_pade(pade_ptr inp);
 extern void newton_search(unsigned long nD);
 extern void verify_pade(fftwl_complex *residues, fftwl_complex *roots, unsigned int nD);
 extern void poly_val_array(fftwl_complex *in, unsigned long nD, fftwl_complex *outQ, fftwl_complex *outQp, fftwl_complex *outP);
-extern void aberth_iter(unsigned int nD);
+extern void aberth_iter(unsigned int nD, char *str);
 extern void sort_by_imag(fftwl_complex *in1, fftwl_complex *in2, unsigned int nD);
 
 // evolve.c

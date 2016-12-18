@@ -48,17 +48,17 @@ int main( int argc, char* argv[]) {
       printf("Unknown text format\n");
       exit(1);
   }
-  complex_array_out("zt-original.txt", data[0]);
-  convertZtoQ(data[0], data[0]);
-  complex_array_out("q-original.txt", data[0]);
-  long double c = 0.5L;
-  for (long int j = 0; j < state.number_modes; j++) {
-    data[1][j] = 1.0IL*c*(1.L - data[0][j]*data[0][j]);
-  } 
-  complex_array_out("v-original.txt", data[1]);
+  //complex_array_out("zt-original.txt", data[0]);
+  //convertZtoQ(data[0], data[0]);
+  //complex_array_out("q-original.txt", data[0]);
+  //long double c = 0.5L;
+  //for (long int j = 0; j < state.number_modes; j++) {
+    //data[1][j] = 1.0IL*c*(1.L - data[0][j]*data[0][j]);
+  //} 
+  //complex_array_out("v-original.txt", data[1]);
   convertQtoZ(data[0], tmpc[5]);  
   restore_potential(data[0], data[1], tmpc[2]);
-  complex_array_out("pre.Phi.ph.txt", tmpc[2]); 
+  //complex_array_out("pre.Phi.ph.txt", tmpc[2]); 
 
   //new_map.scaling 	= 0.025L;
   //new_map.image_offset 	= 0.0L;
