@@ -496,7 +496,7 @@ void aberth_iter(unsigned int nD, char *str) {
     r1 = creall(res[j]);
     i0 = cimagl(2.L*catanl(conf.scaling*rts[j]));
     i1 = cimagl(res[j]);
-    fprintf(fh, "%3d\t%.12LE\t%.12LE\t%.12LE\t%.12LE\n", j, r0, i0, r1, i1);
+    fprintf(fh, "%3d\t%19.12LE\t%19.12LE\t%19.12LE\t%19.12LE\n", j, r0, i0, r1, i1);
   }
   fclose(fh);
   nrm = sqrtl(nrm);
