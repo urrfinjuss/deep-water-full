@@ -281,7 +281,7 @@ void optimal_pade(char *str) {
       printf("Relative Error (nd = %3lu) = %11.5LE\n", nd, best_pade.l2_rel_err);
       //fprintf(fh, "%.3lu\t%11.5LE\n", nd, best_pade.l2_rel_err);
     } else {
-      nd = nd-2;
+      nd = nd-3;
       best_pade.n_poles = nd;
       pade_data.n_lins = 0;
       compute_rational(nd, l_iters);
@@ -524,7 +524,7 @@ void sort_by_imag(fftwl_complex *in1, fftwl_complex *in2, unsigned int nD) {
   while (1) {
     swapped = 0;
     for (int j = 1; j < n2; j++) {
-      if (cimagl(catanl(in1[j-1])) > cimagl(catanl(in1[j]))) {
+      if (cimagl(catanl(conf.scaling*in1[j-1])) > cimagl(catanl(conf.scaling*in1[j]))) {
         tmp1 = in1[j];
         tmp2 = in2[j];
         in1[j] = in1[j-1];
