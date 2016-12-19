@@ -97,6 +97,7 @@ extern void real_array_out(char* fname, long double *in);
 extern void complex_array_out(char *fname, fftwl_complex *in);
 extern void surface_out(char *fname, fftwl_complex *in);
 extern void spec_out(char *fname, fftwl_complex *in1, fftwl_complex *in2);
+extern void output_data(char *fname, fftwl_complex *inPhi);
 extern void print_constants();
 
 // pade.c

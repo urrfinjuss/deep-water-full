@@ -259,19 +259,20 @@ void compute_rational(unsigned long nD, unsigned long n_max_iter) {
 
 void optimal_pade(char *str) {
 //  FILE *fh = fopen("pc_rate.txt","w");
-  unsigned long nd = 2, l_iters = 8;
+  unsigned long nd = 3, l_iters = 8;
   pade best_pade;  
   best_pade.l2_rel_err = 1.L;
   
   //fprintf(fh, "# 1. nD, number poles 2. Error\n\n");
   //for (unsigned int nd = 1; nd < 32; nd++) {
   while (nd < 32) {
-    nd++;
+    nd++; //nd++;
     best_pade.n_poles = nd;
     pade_data.n_lins = 0;
     compute_rational(nd, l_iters);
     deallocate_pade();
-    if (pade_data.l2_rel_err < best_pade.l2_rel_err) {
+//    if ((pade_data.l2_rel_err < best_pade.l2_rel_err)&&(best_pade.l2_rel_err > 1.0E-9L)) {
+    if (best_pade.l2_rel_err > 2.0E-8L) {
       best_pade.l2_rel_err = pade_data.l2_rel_err;
       best_pade.l2_abs_err = pade_data.l2_abs_err;
       best_pade.l2_nrm = pade_data.l2_nrm;
@@ -280,7 +281,7 @@ void optimal_pade(char *str) {
       printf("Relative Error (nd = %3lu) = %11.5LE\n", nd, best_pade.l2_rel_err);
       //fprintf(fh, "%.3lu\t%11.5LE\n", nd, best_pade.l2_rel_err);
     } else {
-      nd = nd-3;
+      nd = nd-2;
       best_pade.n_poles = nd;
       pade_data.n_lins = 0;
       compute_rational(nd, l_iters);
@@ -487,9 +488,15 @@ void aberth_iter(unsigned int nD, char *str) {
   sort_by_imag(rts, res, nD);
   //sprintf(str, "./roots/roots.txt");
   fh = fopen(str,"w");
-  fprintf(fh, "# 1. pole # 2.-3. z_k 4.-5. gamma_k\n# Time = %.12LE\n\n", state.time);
+  fprintf(fh, "# 1. pole # 2.-3. z_k 4.-5. gamma_k\n");
+  fprintf(fh, "# Time = %.12LE\tPade Rel. Error = %.12LE\n\n", state.time, pade_data.l2_rel_err);
+  long double r0, r1, i0, i1;
   for (int j = 0; j < nD; j++) {
-    fprintf(fh, "%3d\t%.12LE\t%.12LE\n", j, creall(2.L*catanl(rts[j])), cimagl(2.L*catanl(rts[j])));
+    r0 = creall(2.L*catanl(conf.scaling*rts[j]));
+    r1 = creall(res[j]);
+    i0 = cimagl(2.L*catanl(conf.scaling*rts[j]));
+    i1 = cimagl(res[j]);
+    fprintf(fh, "%3d\t%.12LE\t%.12LE\t%.12LE\t%.12LE\n", j, r0, i0, r1, i1);
   }
   fclose(fh);
   nrm = sqrtl(nrm);
@@ -555,9 +562,9 @@ void verify_pade(fftwl_complex *residues, fftwl_complex *roots, unsigned int nD)
    tmp_2 = sqrtl(tmp_2)*overN;
    printf("Rat. Approx L2 error:\t%.18LE\n", tmp_2);
    printf("Pole Approx L2 error:\t%.18LE\n", tmp_1);
-   pade_complex_out("target.txt", W);
-   pade_complex_out("rational.txt", W);
-   pade_complex_out("pade.txt", pade);
+   //pade_complex_out("target.txt", W);
+   //pade_complex_out("rational.txt", W);
+   //pade_complex_out("pade.txt", pade);
    fftwl_free(rat);
    fftwl_free(pade);
 }

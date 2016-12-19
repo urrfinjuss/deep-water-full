@@ -43,7 +43,7 @@ void set_initial_data() {
     data[0][j] = 1.L;
     //data[0][j] = 1.L + 0.5L*cexpl(-1.IL*u); // set Q directly
     //data[1][j] = 0.L*cexpl(-1.IL*u);
-    data[1][j] = -0.025IL*(1.L/ctanl(0.5L*(u-0.12IL)) - 1.IL); 
+    data[1][j] = -0.004IL*(1.L/ctanl(0.5L*(u-0.03IL)) - 1.IL); 
   }
   complex_array_out("data0.txt", data[0]);
 }

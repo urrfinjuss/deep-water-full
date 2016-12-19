@@ -32,7 +32,7 @@ void remap(map_ptr new_map, unsigned long int N) {
   long double beta = tanl(0.5L*(new_map->image_offset - conf.image_offset));
   long double overN0 = 1.L/state.number_modes;
   long double overN = 1.L/N;
-  long double R_TOL = 2.0E-15L;
+  long double R_TOL = 1.0E-15L;
   unsigned long int N0 = state.number_modes;
   unsigned int QC_pass = 0;
 
@@ -107,7 +107,7 @@ void remap(map_ptr new_map, unsigned long int N) {
   }
   memset(tmpc[0]+state.number_modes/2, 0, state.number_modes/2*sizeof(fftwl_complex));
   memset(tmpc[1]+state.number_modes/2, 0, state.number_modes/2*sizeof(fftwl_complex));
-  map_quality(tmpc[0], tmpc[1], R_TOL*sqrtl(state.number_modes/4096.L), &QC_pass);
+  map_quality(tmpc[0], tmpc[1], R_TOL, &QC_pass);//*sqrtl(state.number_modes/4096.L)
   //complex_array_out("postref.Q.ft.txt", tmpc[0]);
   //complex_array_out("postref.V.ft.txt", tmpc[1]);
   if (QC_pass) {
