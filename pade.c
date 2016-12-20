@@ -54,7 +54,7 @@ void set_weight() {
 void prepare_array(fftwl_complex *in) {
   unsigned long N = state.number_modes;
   for (unsigned long j = 0; j < N-1; j++) {
-    W[j] = in[j+1] - in[0];
+    W[j] = in[j+1]*in[j+1] - in[0]*in[0];
   }
   set_weight();
 }
