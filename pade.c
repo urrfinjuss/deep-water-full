@@ -106,7 +106,7 @@ void allocate_pade(unsigned long nD) {
     }
   }
   //prepare_array(data[0]);
-  prepare_array_two(data[1]);
+  //prepare_array_two(data[1]);  // was set here
   //pade_complex_out("Q0.txt", W);
   //pade_real_out("Weight.txt", M);
   //printf("Dot Prod: Re = %.12LE\tIm = %.12LE\n", creall(dot(W,W)), cimagl(dot(W,W)));
@@ -236,11 +236,16 @@ void gram_schmidt(unsigned long nD){
   }
 }
 
-void compute_rational(unsigned long nD, unsigned long n_max_iter) {
+void compute_rational(unsigned long nD, unsigned long n_max_iter, unsigned int FFLAG) {
   pade_data.n_lins = 0;
   pade_data.n_poles = nD;
 
   allocate_pade(nD);
+  if (FFLAG == 1) {
+    prepare_array(data[0]);
+  } else {
+    prepare_array_two(data[1]);
+  }
   gram_schmidt(nD);
   evaluate_poly_array(nD);
   find_l2_error(&pade_data);  
@@ -266,7 +271,7 @@ void compute_rational(unsigned long nD, unsigned long n_max_iter) {
   //exit(1);
 }
 
-void optimal_pade(char *str) {
+void optimal_pade(char *str, unsigned int FFLAG) {
 //  FILE *fh = fopen("pc_rate.txt","w");
   unsigned long nd = 3, l_iters = 8;
   pade best_pade;  
@@ -278,7 +283,7 @@ void optimal_pade(char *str) {
     nd++; //nd++;
     best_pade.n_poles = nd;
     pade_data.n_lins = 0;
-    compute_rational(nd, l_iters);
+    compute_rational(nd, l_iters, FFLAG);
     deallocate_pade();
 //    if ((pade_data.l2_rel_err < best_pade.l2_rel_err)&&(best_pade.l2_rel_err > 1.0E-9L)) {
     if (best_pade.l2_rel_err > 2.0E-8L) {
@@ -293,7 +298,7 @@ void optimal_pade(char *str) {
       nd = nd-1;
       best_pade.n_poles = nd;
       pade_data.n_lins = 0;
-      compute_rational(nd, l_iters);
+      compute_rational(nd, l_iters, FFLAG);
       aberth_iter(nd, str);
       //newton_search(nd);
       // set new map parameters

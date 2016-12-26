@@ -236,8 +236,8 @@ void evolve_rk6() {
     if (QC_pass == 0) {
       //printf("Bad Quality Map.\tTime = %.9LE\nStop!\n", time);
       ref_counter++;
-      sprintf(filename2, "./roots/roots_%04lu.txt", ref_counter);
-      optimal_pade(filename2);
+      sprintf(filename2, "./roots_G/roots_%04lu.txt", ref_counter);
+      optimal_pade(filename2, 1);
       spec_out("last.spec.txt", tmpc[0], tmpc[1]);
       restore_potential(data[0], data[1], tmpc[2]);
       //print_constants();
@@ -285,8 +285,10 @@ void evolve_rk6() {
         sprintf(filename1, "./aux/data_%04lu.txt", counter);
         output_data(filename1, tmpc[5]);
         printf("T = %23.16LE\tH = %23.16LE\n", state.time, Ham);
-        sprintf(filename2, "./roots_more/roots_%04lu.txt", counter);
-        optimal_pade(filename2);
+        sprintf(filename2, "./roots/roots_R%04lu.txt", counter);
+        optimal_pade(filename2, 1);
+        sprintf(filename2, "./roots/roots_V%04lu.txt", counter);
+        optimal_pade(filename2, 0);
       }
     }
   }
