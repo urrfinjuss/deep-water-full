@@ -292,7 +292,7 @@ void optimal_pade(char *str, unsigned int FFLAG) {
       best_pade.l2_nrm = pade_data.l2_nrm;
       best_pade.n_poles = nd;
       best_pade.n_lins = l_iters;
-      printf("Relative Error (nd = %3lu) = %11.5LE\n", nd, best_pade.l2_rel_err);
+      //printf("Relative Error (nd = %3lu) = %11.5LE\n", nd, best_pade.l2_rel_err);
       //fprintf(fh, "%.3lu\t%11.5LE\n", nd, best_pade.l2_rel_err);
     } else {
       nd = nd-2;
