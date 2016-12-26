@@ -295,7 +295,7 @@ void optimal_pade(char *str, unsigned int FFLAG) {
       printf("Relative Error (nd = %3lu) = %11.5LE\n", nd, best_pade.l2_rel_err);
       //fprintf(fh, "%.3lu\t%11.5LE\n", nd, best_pade.l2_rel_err);
     } else {
-      nd = nd-1;
+      nd = nd-2;
       best_pade.n_poles = nd;
       pade_data.n_lins = 0;
       compute_rational(nd, l_iters, FFLAG);
@@ -488,7 +488,7 @@ void aberth_iter(unsigned int nD, char *str) {
       }
       fclose(fh);*/
       counter++;
-      printf("Aberth iteration %3ld: %.12LE\n", k, nrm);
+      //printf("Aberth iteration %3ld: %.12LE\n", k, nrm);
     }
     k++;
     if ( k == 120) break;
@@ -514,7 +514,7 @@ void aberth_iter(unsigned int nD, char *str) {
   }
   fclose(fh);
   nrm = sqrtl(nrm);
-  printf("Aberth iteration %3ld: %.12LE\n", k, nrm);
+  //printf("Aberth iteration %3ld: %.12LE\n", k, nrm);
   verify_pade(res, rts, nD);
   //printf("Closest singularity is at Re q = %.12LE\tIm q = %.12LE\n", creall(2.L*catanl(rts[0])), cimagl(2.L*catanl(rts[0])));
   //alt_map.scaling = sqrtl(cimagl(rts[0]));
@@ -574,8 +574,8 @@ void verify_pade(fftwl_complex *residues, fftwl_complex *roots, unsigned int nD)
    }
    tmp_1 = sqrtl(tmp_1)*overN;
    tmp_2 = sqrtl(tmp_2)*overN;
-   printf("Rat. Approx L2 error:\t%.18LE\n", tmp_2);
-   printf("Pole Approx L2 error:\t%.18LE\n", tmp_1);
+   //printf("Rat. Approx L2 error:\t%.18LE\n", tmp_2);
+   //printf("Pole Approx L2 error:\t%.18LE\n", tmp_1);
    //pade_complex_out("target.txt", W);
    //pade_complex_out("rational.txt", W);
    //pade_complex_out("pade.txt", pade);
