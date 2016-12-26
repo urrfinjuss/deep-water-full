@@ -218,4 +218,3 @@ void track_singularity(fftwl_complex *inQ) {
 }
 
 
-

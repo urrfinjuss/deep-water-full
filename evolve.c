@@ -285,6 +285,8 @@ void evolve_rk6() {
         sprintf(filename1, "./aux/data_%04lu.txt", counter);
         output_data(filename1, tmpc[5]);
         printf("T = %23.16LE\tH = %23.16LE\n", state.time, Ham);
+        sprintf(filename2, "./roots_more/roots_%04lu.txt", counter);
+        optimal_pade(filename2);
       }
     }
   }

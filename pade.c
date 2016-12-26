@@ -59,6 +59,14 @@ void prepare_array(fftwl_complex *in) {
   set_weight();
 }
 
+void prepare_array_two(fftwl_complex *in) {
+  unsigned long N = state.number_modes;
+  for (unsigned long j = 0; j < N-1; j++) {
+    W[j] = in[j+1] - in[0];
+  }
+  set_weight();
+}
+
 fftwl_complex dot(fftwl_complex *in1, fftwl_complex *in2) {
    unsigned long N = state.number_modes;
    fftwl_complex  rvalue = 0.L;
@@ -97,7 +105,8 @@ void allocate_pade(unsigned long nD) {
       arrayQ[j] = arrayQ[j]*(tanl(0.5L*q) + 1.IL*xi);  // do renormaliztion
     }
   }
-  prepare_array(data[0]);
+  //prepare_array(data[0]);
+  prepare_array_two(data[1]);
   //pade_complex_out("Q0.txt", W);
   //pade_real_out("Weight.txt", M);
   //printf("Dot Prod: Re = %.12LE\tIm = %.12LE\n", creall(dot(W,W)), cimagl(dot(W,W)));
@@ -281,7 +290,7 @@ void optimal_pade(char *str) {
       printf("Relative Error (nd = %3lu) = %11.5LE\n", nd, best_pade.l2_rel_err);
       //fprintf(fh, "%.3lu\t%11.5LE\n", nd, best_pade.l2_rel_err);
     } else {
-      nd = nd-3;
+      nd = nd-1;
       best_pade.n_poles = nd;
       pade_data.n_lins = 0;
       compute_rational(nd, l_iters);
@@ -635,4 +644,14 @@ void poly_val_array(fftwl_complex *in, unsigned long nD, fftwl_complex *outQ, ff
     fftwl_free(dQ[j]);
   }
   fftwl_free(s);
+}
+
+void identify_vc(fftwl_complex *inRts, fftwl_complex *inRes) {
+  unsigned int N = state.number_modes;
+  fftwl_complex *arr = fftwl_malloc(N*sizeof(fftwl_complex)); 
+ 
+  for (int j = 0; j < N; j++) {
+    arr[j] = 0.L; 
+  } 
+  fftwl_free(arr); 
 }
