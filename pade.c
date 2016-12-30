@@ -51,7 +51,7 @@ void set_weight() {
   }
 }
 
-void prepare_array(fftwl_complex *in) {
+/*void prepare_array(fftwl_complex *in) {
   unsigned long N = state.number_modes;
   for (unsigned long j = 0; j < N-1; j++) {
     W[j] = in[j+1]*in[j+1] - in[0]*in[0];
@@ -65,7 +65,7 @@ void prepare_array_two(fftwl_complex *in) {
     W[j] = in[j+1] - in[0];
   }
   set_weight();
-}
+}*/
 
 fftwl_complex dot(fftwl_complex *in1, fftwl_complex *in2) {
    unsigned long N = state.number_modes;
@@ -236,16 +236,16 @@ void gram_schmidt(unsigned long nD){
   }
 }
 
-void compute_rational(unsigned long nD, unsigned long n_max_iter, unsigned int FFLAG) {
+void compute_rational(unsigned long nD, unsigned long n_max_iter, fftwl_complex *in) {
+  unsigned long N = state.number_modes;
   pade_data.n_lins = 0;
   pade_data.n_poles = nD;
 
   allocate_pade(nD);
-  if (FFLAG == 1) {
-    prepare_array(data[0]);
-  } else {
-    prepare_array_two(data[1]);
+  for (unsigned long j = 0; j < N-1; j++) {
+    W[j] = in[j+1] - in[0];
   }
+  set_weight();
   gram_schmidt(nD);
   evaluate_poly_array(nD);
   find_l2_error(&pade_data);  
@@ -271,7 +271,7 @@ void compute_rational(unsigned long nD, unsigned long n_max_iter, unsigned int F
   //exit(1);
 }
 
-void optimal_pade(char *str, unsigned int FFLAG) {
+void optimal_pade(char *str, fftwl_complex *in) {
 //  FILE *fh = fopen("pc_rate.txt","w");
   unsigned long nd = 3, l_iters = 8;
   pade best_pade;  
@@ -283,7 +283,7 @@ void optimal_pade(char *str, unsigned int FFLAG) {
     nd++; //nd++;
     best_pade.n_poles = nd;
     pade_data.n_lins = 0;
-    compute_rational(nd, l_iters, FFLAG);
+    compute_rational(nd, l_iters, in);
     deallocate_pade();
 //    if ((pade_data.l2_rel_err < best_pade.l2_rel_err)&&(best_pade.l2_rel_err > 1.0E-9L)) {
     if (best_pade.l2_rel_err > 2.0E-8L) {
@@ -298,7 +298,7 @@ void optimal_pade(char *str, unsigned int FFLAG) {
       nd = nd-2;
       best_pade.n_poles = nd;
       pade_data.n_lins = 0;
-      compute_rational(nd, l_iters, FFLAG);
+      compute_rational(nd, l_iters, in);
       aberth_iter(nd, str);
       //newton_search(nd);
       // set new map parameters

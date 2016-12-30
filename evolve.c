@@ -227,39 +227,28 @@ void evolve_rk6() {
     time = (j+1)*dt;
     j++;
     state.time = time + tshift;
-    //restore_potential(data[0], data[1], tmpc[2]);  
-    //Ham = (state.kineticE + state.potentialE)/PI;
-    //printf("T = %23.18LE\tH = %23.18LE\n", time, Ham);
 
     map_quality_fourier(data[0], data[1], M_TOL, &QC_pass); 
-    //*sqrtl(state.number_modes/4096.L)
     if (QC_pass == 0) {
-      //printf("Bad Quality Map.\tTime = %.9LE\nStop!\n", time);
       ref_counter++;
+      for (unsigned long j = 0; j < state.number_modes; j++) tmpc[5][j] = data[0][j]*data[0][j];
       sprintf(filename2, "./roots_G/roots_%04lu.txt", ref_counter);
-      optimal_pade(filename2, 1);
+      optimal_pade(filename2, tmpc[5]);
       spec_out("last.spec.txt", tmpc[0], tmpc[1]);
       restore_potential(data[0], data[1], tmpc[2]);
-      //print_constants();
-      //printf("Attemptng to fix the map.\n");
       // Attempt to fix the conformal map
       remap(&alt_map, state.number_modes);
       restore_potential(data[0], data[1], tmpc[2]);
-      //print_constants();
       map_quality_fourier(data[0], data[1], R_TOL, &QC_pass); 
-      //*sqrtl(state.number_modes/4096.L)
       if (QC_pass == 0) {
         printf("Doubling # of Modes: %lu\n", 2*state.number_modes);
         remap(&alt_map, 2*state.number_modes);
         skip = lroundl(1.5L*skip);
-        //state.number_modes = 2*state.number_modes; 
         restore_potential(data[0], data[1], tmpc[2]);
         print_constants();
         map_quality_fourier(data[0], data[1], R_TOL, &QC_pass); 
-	//*sqrtl(state.number_modes/4096.L)
       }
       if (QC_pass == 1) {
-	//printf("Resume evolution from T = %13.9LE\n", time + tshift);
         restore_potential(data[0], data[1], tmpc[2]);  
         Ham = (state.kineticE + state.potentialE)/PI;
         printf("T = %23.16LE\tH = %23.16LE\n", state.time, Ham);
@@ -285,10 +274,17 @@ void evolve_rk6() {
         sprintf(filename1, "./aux/data_%04lu.txt", counter);
         output_data(filename1, tmpc[5]);
         printf("T = %23.16LE\tH = %23.16LE\n", state.time, Ham);
+
+        sprintf(filename2, "./roots/roots_P%04lu.txt", counter);
+        optimal_pade(filename2, tmpc[5]);
+
+        for (unsigned long j = 0; j < state.number_modes; j++) tmpc[5][j] = data[0][j]*data[0][j];
         sprintf(filename2, "./roots/roots_R%04lu.txt", counter);
-        optimal_pade(filename2, 1);
+        optimal_pade(filename2, tmpc[5]);
+
+        for (unsigned long j = 0; j < state.number_modes; j++) tmpc[5][j] = data[1][j];
         sprintf(filename2, "./roots/roots_V%04lu.txt", counter);
-        optimal_pade(filename2, 0);
+        optimal_pade(filename2, tmpc[5]);
       }
     }
   }
