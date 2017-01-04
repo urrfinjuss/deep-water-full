@@ -4,7 +4,7 @@
 static fftwl_complex 	**kq, *tQ;
 static fftwl_complex 	**kv, *tV;
 
-static long double	cfl = 0.080L;
+static long double	cfl = 0.240L; // used to be 0.080L
 static unsigned long    kz;
 static const unsigned long 	pD = 12;
 static const long double 	one_third        = 1.0L/3.0L;
@@ -18,7 +18,7 @@ static const long double 	one_onetwentieth = 1.0L/120.0L;
 void init_timemarching() {
   kq = fftwl_malloc(7*sizeof(fftwl_complex *));
   kv = fftwl_malloc(7*sizeof(fftwl_complex *));
-  state.kD = lroundl((11.L/12.L)*state.number_modes/2.L);  // was 3/8
+  state.kD = lroundl((11.L/12.L)*state.number_modes/2.L);  // was 11/12
   kz = lroundl(7.L/6.L*state.kD);
   if (kz > state.number_modes/2) kz = state.number_modes/2;
   printf("Dissipative Range starts at k0 = %lu\n", state.kD);
@@ -30,7 +30,7 @@ void allocate_timemarching() {
     kq[j] = fftwl_malloc(N*sizeof(fftwl_complex));
     kv[j] = fftwl_malloc(N*sizeof(fftwl_complex));
   }
-  state.kD = lroundl((11.L/12.L)*state.number_modes/2.L);  // was 3/8
+  state.kD = lroundl((11.L/12.L)*state.number_modes/2.L);  // was 11/12
   kz = lroundl(7.L/6.L*state.kD);
   if (kz > state.number_modes/2) kz = state.number_modes/2;
   printf("New Dissipative Range starts at k0 = %lu\n", state.kD);
@@ -198,8 +198,8 @@ void evolve_rk6() {
   unsigned long		ref_counter = 0;
   char 			filename1[80];
   char 			filename2[80];
-  long double		M_TOL = 5.0E-15L;
-  long double		R_TOL = 1.0E-15L;
+  long double		M_TOL = 1.0E-15L;
+  long double		R_TOL = 4.0E-16L;
   long double		tshift = 0.L;
   long double   	time = 0.L, Ham = 0.L;
   long double   	dt = cfl*2.L*PI*conf.scaling/state.number_modes;
@@ -264,24 +264,36 @@ void evolve_rk6() {
     } else {
       if ( !((j+1) % skip) ) {
         counter++;
-        sprintf(filename2, "./data/spec_%04lu.txt", counter);
-        spec_out(filename2, tmpc[0], tmpc[1]);
+        // write out spectrum
+        sprintf(filename1, "./data/spec_%04lu.txt", counter);
+        spec_out(filename1, tmpc[0], tmpc[1]);
+        // write out surface shape and cut for Z
         convertQtoZ(data[0], tmpc[5]);
+        sprintf(filename2, "./roots/roots_Z%04lu.txt", counter);
+        optimal_pade(filename2, tmpc[5]);
         sprintf(filename1, "./data/surf_%04lu.txt", counter);
         surface_out(filename1, tmpc[5]);
+        // write out potential and its cut
         restore_potential(data[0], data[1], tmpc[5]);  
         Ham = (state.kineticE + state.potentialE)/PI;
+        printf("T = %23.16LE\tH = %23.16LE\n", state.time, Ham);
         sprintf(filename1, "./aux/data_%04lu.txt", counter);
         output_data(filename1, tmpc[5]);
-        printf("T = %23.16LE\tH = %23.16LE\n", state.time, Ham);
-
         sprintf(filename2, "./roots/roots_P%04lu.txt", counter);
         optimal_pade(filename2, tmpc[5]);
-
+        // write out cut for derivative of potential
+        memcpy(tmpc[0], tmpc[5], state.number_modes*sizeof(fftwl_complex));        
+        fftwl_execute(ift0);
+        memset(tmpc[0] + state.number_modes/2, 0, state.number_modes*sizeof(fftwl_complex)/2);
+        for (unsigned long j = 0; j < state.number_modes/2; j++) tmpc[0][j] = -1.0IL*j*tmpc[0][j]/state.number_modes;
+        fftwl_execute(ft0);
+        sprintf(filename2, "./roots/roots_dP%04lu.txt", counter);
+        optimal_pade(filename2, tmpc[0]);
+	// write out cut for R
         for (unsigned long j = 0; j < state.number_modes; j++) tmpc[5][j] = data[0][j]*data[0][j];
         sprintf(filename2, "./roots/roots_R%04lu.txt", counter);
         optimal_pade(filename2, tmpc[5]);
-
+	// write out cut for V
         for (unsigned long j = 0; j < state.number_modes; j++) tmpc[5][j] = data[1][j];
         sprintf(filename2, "./roots/roots_V%04lu.txt", counter);
         optimal_pade(filename2, tmpc[5]);
