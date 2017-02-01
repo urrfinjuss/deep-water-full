@@ -293,6 +293,10 @@ void evolve_rk6() {
         for (unsigned long j = 0; j < state.number_modes; j++) tmpc[5][j] = data[0][j]*data[0][j];
         sprintf(filename2, "./roots/roots_R%04lu.txt", counter);
         optimal_pade(filename2, tmpc[5]);
+	// write out cut for Zu
+        for (unsigned long j = 0; j < state.number_modes; j++) tmpc[5][j] = 1.L/(data[0][j]*data[0][j]);
+        sprintf(filename2, "./roots/roots_DZ%04lu.txt", counter);
+        optimal_pade(filename2, tmpc[5]);
 	// write out cut for V
         for (unsigned long j = 0; j < state.number_modes; j++) tmpc[5][j] = data[1][j];
         sprintf(filename2, "./roots/roots_V%04lu.txt", counter);
