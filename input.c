@@ -43,7 +43,13 @@ void set_initial_data() {
     data[0][j] = 1.L;
     //data[0][j] = 1.L + 0.5L*cexpl(-1.IL*u); // set Q directly
     //data[1][j] = 0.L*cexpl(-1.IL*u);
-    data[1][j] = -0.0005IL*(1.L/ctanl(0.5L*(u-0.03IL)) - 1.IL); 
+    //data[1][j] = -0.0005IL*(1.L/ctanl(0.5L*(u-0.03IL)) - 1.IL); 
+    data[1][j]  = -0.005IL*(1.L/ctanl(0.5L*(u-0.1IL)) - 1.IL); 
+    //data[1][j] += +0.005IL*(1.L/ctanl(0.5L*(u-0.11IL)) - 1.IL); 
+    // sims 3 (dipole surf + V)
+    data[0][j] = 0.04L/(ctanl(0.5L*u)-0.04IL) - 0.04L/(ctanl(0.5L*u)-0.08IL);
+    data[0][j] = cpowl(1.L - 0.5IL*(1.L + cpowl(ctanl(0.5L*u),2))*data[0][j], -0.5L);
+    data[1][j] = -0.01IL*(1.L/ctanl(0.5L*(u - 0.8IL))  - 1.IL);
   }
   complex_array_out("data0.txt", data[0]);
 }
