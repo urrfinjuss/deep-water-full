@@ -35,6 +35,22 @@ void set_initial_data() {
   long double overN = 1.L/state.number_modes;
   long double q, u;
   long double fi = 0.0L*PI;
+
+  long double Q = 0.01L; // sim 5
+//  long double Q = 0.20L; // sim 6
+  long double C = -0.1L;
+  long double a1 = 0.05L;
+  long double a2 = 0.10L;
+  fftwl_complex D = csqrtl(-0.25L*cpowl(a2-a1,2L)+Q*(a2-a1));
+  fftwl_complex w1 = 0.5IL*(a1+a2) + D;
+  fftwl_complex w2 = 0.5IL*(a1+a2) - D;
+
+  printf("a1 = %.12LE + I%.12LE\n", creall(a1), cimagl(a1));
+  printf("a2 = %.12LE + I%.12LE\n", creall(a2), cimagl(a2));
+  printf("D = %.12LE + I%.12LE\n", creall(D), cimagl(D));
+  printf("w1 = %.12LE + I%.12LE\n", creall(w1), cimagl(w1));
+  printf("w2 = %.12LE + I%.12LE\n", creall(w2), cimagl(w2));
+
   for (long int j = 0; j < state.number_modes; j++) {
     q = 2.L*PI*(j*overN - 0.5L) - conf.origin_offset;
     u = conf.image_offset - fi + 2.L*atan2l(conf.scaling*sinl(0.5L*q),cosl(0.5L*q));
@@ -50,8 +66,14 @@ void set_initial_data() {
     data[0][j] = 0.04L/(ctanl(0.5L*u)-0.04IL) - 0.04L/(ctanl(0.5L*u)-0.08IL);
     data[0][j] = cpowl(1.L - 0.5IL*(1.L + cpowl(ctanl(0.5L*u),2))*data[0][j], -0.5L);
     data[1][j] = -0.01IL*(1.L/ctanl(0.5L*(u - 0.8IL))  - 1.IL);
+    // sim 5&6
+    // formula for Q,V
+    data[0][j] = 1.L + 0.5L*(Q*(a2-a1)/D)*(1.L/(2.L*tan(u/2) - w1) - 1.L/(2.L*tan(u/2)-w2)); // R
+    data[1][j] = C/Q*(data[0][j] - 1.L);
+    data[0][j] = csqrtl(data[0][j]);
   }
-  complex_array_out("data0.txt", data[0]);
+  complex_array_out("Q0.txt", data[0]);
+  complex_array_out("V0.txt", data[0]);
 }
 
 void load_ascii() {
