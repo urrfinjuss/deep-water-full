@@ -37,7 +37,7 @@ void set_initial_data() {
   long double fi = 0.0L*PI;
 
   long double Q = 0.01L; // sim 5
-//  long double Q = 0.20L; // sim 6
+  //long double Q = 0.20L; // sim 6
   long double C = -0.1L;
   long double a1 = 0.05L;
   long double a2 = 0.10L;
@@ -71,9 +71,20 @@ void set_initial_data() {
     data[0][j] = 1.L + 0.5L*(Q*(a2-a1)/D)*(1.L/(2.L*tan(u/2) - w1) - 1.L/(2.L*tan(u/2)-w2)); // R
     data[1][j] = C/Q*(data[0][j] - 1.L);
     data[0][j] = csqrtl(data[0][j]);
+    //
+    tmpc[0][j] = data[1][j]*overN; 
   }
+  fftwl_complex z0;
+  fftwl_execute(ift0);
+  complex_array_out("V0.txt", data[1]);
+  printf("Average V = %.12LE\n", cabsl(tmpc[0][0]));
+  compute_zero_mode_complex(tmpc[0], 0.L, &z0);
+  tmpc[0][0] = z0;
+  printf("Average V = %.12LE\n", cabsl(tmpc[0][0]));
+  fftwl_execute(ft0);
+  memcpy(data[1], tmpc[0], state.number_modes*sizeof(fftwl_complex));
   complex_array_out("Q0.txt", data[0]);
-  complex_array_out("V0.txt", data[0]);
+  complex_array_out("V1.txt", data[1]);
 }
 
 void load_ascii() {

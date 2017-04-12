@@ -203,7 +203,9 @@ void evolve_rk6() {
   long double		tshift = 0.L;
   long double   	time = 0.L, Ham = 0.L;
   long double   	dt = cfl*2.L*PI*conf.scaling/state.number_modes;
-
+  FILE *fh_time	= fopen("time_dependence.txt","w");
+  fprintf(fh_time, "# 1. time 2. Kinetic 3. Potential 4. Momentum X 5. Momentum Y\n\n");
+  fclose(fh_time);
   map_quality_fourier(data[0], data[1], M_TOL, &QC_pass);
   sprintf(filename2, "./data/spec_%04lu.txt", counter);
   spec_out(filename2, tmpc[0], tmpc[1]);
@@ -211,10 +213,15 @@ void evolve_rk6() {
   sprintf(filename1, "./data/surf_%04lu.txt", counter);
   surface_out(filename1, tmpc[5]);
   restore_potential(data[0], data[1], tmpc[5]);  
+  fh_time = fopen("time_dependence.txt","a");
+  fprintf(fh_time, "%.17LE\t%.17LE\t%.17LE\t", state.time, state.kineticE/PI, state.potentialE/PI); 
+  fprintf(fh_time, "%.17LE\t%.17LE\n", cimagl(state.momentum), creall(state.momentum)); 
+  fclose(fh_time);
   Ham = (state.kineticE + state.potentialE)/PI;
   sprintf(filename1, "./aux/data_%04lu.txt", counter);
   output_data(filename1, tmpc[5]);
   printf("T = %23.16LE\tH = %23.16LE\n", state.time, Ham);
+
   //*sqrtl(state.number_modes/4096.L)
   if (QC_pass == 0) {
     printf("Bad quality map at start.\tStop!\n");
@@ -275,6 +282,10 @@ void evolve_rk6() {
         surface_out(filename1, tmpc[5]);
         // write out potential and its cut
         restore_potential(data[0], data[1], tmpc[5]);  
+        fh_time = fopen("time_dependence.txt","a");
+        fprintf(fh_time, "%.17LE\t%.17LE\t%.17LE\t", state.time, state.kineticE/PI, state.potentialE/PI); 
+        fprintf(fh_time, "%.17LE\t%.17LE\n", cimagl(state.momentum), creall(state.momentum)); 
+        fclose(fh_time);
         Ham = (state.kineticE + state.potentialE)/PI;
         printf("T = %23.16LE\tH = %23.16LE\n", state.time, Ham);
         sprintf(filename1, "./aux/data_%04lu.txt", counter);
