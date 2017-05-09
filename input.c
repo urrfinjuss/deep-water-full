@@ -33,57 +33,101 @@ void read_input(char *fname) {
 
 void set_initial_data() {
   long double overN = 1.L/state.number_modes;
-  long double q, u;
+  long double q, u, xi;
   long double fi = 0.0L*PI;
 
-  long double Q = 0.01L; // sim 5
+  //long double Q = 0.01L; // sim 5
   //long double Q = 0.20L; // sim 6
-  long double C = -0.1L;
-  long double a1 = 0.05L;
-  long double a2 = 0.10L;
-  fftwl_complex D = csqrtl(-0.25L*cpowl(a2-a1,2L)+Q*(a2-a1));
-  fftwl_complex w1 = 0.5IL*(a1+a2) + D;
-  fftwl_complex w2 = 0.5IL*(a1+a2) - D;
+  //long double Q = 0.001L; sim 10  // sim 8 and 9: Q = 2.5L;
+  //long double C = -0.25L; sim 10  // sim 8 and 9: C = -0.02L;
+  long double Q = 0.50L; // pirate run 2.5L
+  long double C = -0.02L;
+  // sim 10
+  //fftwl_complex s1 = -1.0IL*ctanl(0.5L*0.050IL);
+  //fftwl_complex s2 = -1.0IL*ctanl(0.5L*0.075IL);
+  // sim 11
+  fftwl_complex s1 = -1.0IL*ctanl(0.5L*0.050IL);
+  fftwl_complex s2 = -1.0IL*ctanl(0.5L*0.075IL);
+  //
+  fftwl_complex Disc = -cpowl(s2-s1,2)*(1+Q*Q) + 2.L*Q*(s2-s1)*(1-s1*s2);
+  fftwl_complex r1 = (1.IL*(s1+s2) - csqrtl(Disc))/(2.L-Q*(s2-s1));
+  fftwl_complex r2 = (1.IL*(s1+s2) + csqrtl(Disc))/(2.L-Q*(s2-s1));
+  //fftwl_complex D = csqrtl(-0.25L*cpowl(a2-a1,2L)+Q*(a2-a1));
+  //fftwl_complex w1 = 0.5IL*(a1+a2) + D;
+  //fftwl_complex w2 = 0.5IL*(a1+a2) - D;
+  long double S = tanhl(0.5L*0.2L);
 
-  printf("a1 = %.12LE + I%.12LE\n", creall(a1), cimagl(a1));
-  printf("a2 = %.12LE + I%.12LE\n", creall(a2), cimagl(a2));
-  printf("D = %.12LE + I%.12LE\n", creall(D), cimagl(D));
-  printf("w1 = %.12LE + I%.12LE\n", creall(w1), cimagl(w1));
-  printf("w2 = %.12LE + I%.12LE\n", creall(w2), cimagl(w2));
+
+  printf("s1 = %.12LE + I%.12LE\n", creall(s1), cimagl(s1));
+  printf("s2 = %.12LE + I%.12LE\n", creall(s2), cimagl(s2));
+  printf("r1 = %.12LE + I%.12LE\n", creall(r1), cimagl(r1));
+  printf("r2 = %.12LE + I%.12LE\n", creall(r2), cimagl(r2));
+  printf("Discriminant = %.12LE + I%.12LE\n", creall(Disc), cimagl(Disc));
+  long double a1 = 0.045L, b1 = 0.050L, c1 = 0.055L;
+  long double a2 = 0.070L, b2 = 0.075L, c2 = 0.080L;
+  a1 = 0.0050L; a2 = 0.0075L; // sim 11
+
+  long double a3 = 0.2L; // sim 12
 
   for (long int j = 0; j < state.number_modes; j++) {
     q = 2.L*PI*(j*overN - 0.5L) - conf.origin_offset;
     u = conf.image_offset - fi + 2.L*atan2l(conf.scaling*sinl(0.5L*q),cosl(0.5L*q));
-    //data[0][j] = -sinl(fi)+0.125L*sinl(2.L*fi)-33.0IL/64.L + 1.IL*cexpl(-1.IL*u) + 0.125IL*cexpl(-2.IL*u); // easy Z-tilde
-    //data[0][j] = -1.IL*cpowl(0.01L*(1.L/ctanl(0.5L*(u-0.1IL)) - 1.IL),2);
-    data[0][j] = 1.L;
-    //data[0][j] = 1.L + 0.5L*cexpl(-1.IL*u); // set Q directly
-    //data[1][j] = 0.L*cexpl(-1.IL*u);
-    //data[1][j] = -0.0005IL*(1.L/ctanl(0.5L*(u-0.03IL)) - 1.IL); 
-    data[1][j]  = -0.005IL*(1.L/ctanl(0.5L*(u-0.1IL)) - 1.IL); 
-    //data[1][j] += +0.005IL*(1.L/ctanl(0.5L*(u-0.11IL)) - 1.IL); 
-    // sims 3 (dipole surf + V)
-    data[0][j] = 0.04L/(ctanl(0.5L*u)-0.04IL) - 0.04L/(ctanl(0.5L*u)-0.08IL);
-    data[0][j] = cpowl(1.L - 0.5IL*(1.L + cpowl(ctanl(0.5L*u),2))*data[0][j], -0.5L);
-    data[1][j] = -0.01IL*(1.L/ctanl(0.5L*(u - 0.8IL))  - 1.IL);
-    // sim 5&6
-    // formula for Q,V
-    data[0][j] = 1.L + 0.5L*(Q*(a2-a1)/D)*(1.L/(2.L*tan(u/2) - w1) - 1.L/(2.L*tan(u/2)-w2)); // R
-    data[1][j] = C/Q*(data[0][j] - 1.L);
+    xi = tanl(0.5L*u);
+    // sims (proper periodic)
+    data[0][j] = 2.L*(xi-1.IL*s1)*(xi-1.IL*s2)/((2.L-Q*(s2-s1))*(xi-r1)*(xi-r2));
+    data[1][j] = C*(data[0][j] - 1.L);
     data[0][j] = csqrtl(data[0][j]);
-    //
+    // sims (sim 12 lge pole)
+    data[0][j] = 2.L/(2.L + Q*S)*(1.L + 1.IL*Q*(1.L - S*S)/((2.L+Q*S)*xi - 1.IL*(2.L*S+Q)));
+    data[1][j] = C*(data[0][j] - 1.L);
+    data[0][j] = csqrtl(data[0][j]);
+    // sims (initial Z-tilde)
+    data[0][j] =  clogl(  1.IL*cexpl(-1.IL*(u-1.IL*a3)) - 1.IL ) + 0.5IL*PI;  // sim 12
+    //data[0][j] =  clogl(1.IL*csinl(0.5L*(u-1.IL*a1))) -  clogl(1.IL*csinl(0.5L*(u-1.IL*a2)));  // sim 11: pirate run
+    data[0][j] = -1.IL*Q*data[0][j]/1.L; 	// necessary (sim 11)
+    // pade test for VZi
     tmpc[0][j] = data[1][j]*overN; 
   }
+  // if setting Z-tilde then uncomment below
+  
+  complex_array_out("Z0.txt", data[0]);
+  convertZtoQ(data[0], data[0]);  // convert Z-tilde to Q
+  
+  // end uncomment
+  complex_array_out("Q0.txt", data[0]);
+  for (long int j = 0; j < state.number_modes; j++) {
+    data[1][j] = C*(data[0][j]*data[0][j] - 1.L);  // required when setting Z-tilde
+    tmpc[0][j] = data[1][j]*overN;
+  }
+  complex_array_out("V0.txt", data[1]);
   fftwl_complex z0;
   fftwl_execute(ift0);
-  complex_array_out("V0.txt", data[1]);
   printf("Average V = %.12LE\n", cabsl(tmpc[0][0]));
+  if (PADE_TEST) {
+    for (long int j = 0; j < state.number_modes; j++) {
+      data[0][j] = 1.L/(data[0][j]*data[0][j]);
+      data[1][j] = -1.IL*data[1][j]*data[0][j];
+    }
+    optimal_pade("Zu_initial.pade", data[0]); 
+    optimal_pade("Phiu_initial.pade", data[1]); 
+    printf("PADE_TEST flag is on!\n");
+    exit(1);
+  }
+
   compute_zero_mode_complex(tmpc[0], 0.L, &z0);
   tmpc[0][0] = z0;
-  printf("Average V = %.12LE\n", cabsl(tmpc[0][0]));
+  //printf("Average V = %.12LE\n", cabsl(tmpc[0][0]));
+  for (long int j = 0; j < state.number_modes; j++) tmpc[1][j] = data[0][j]*overN;
+  fftwl_execute(ift1);
+  for (long int j = 0; j < state.number_modes; j++) {
+    if (cabsl(tmpc[0][j]) < 1.0E-14L) tmpc[0][j] = 0.L;
+    if (cabsl(tmpc[1][j]) < 1.0E-14L) tmpc[1][j] = 0.L;
+  }
   fftwl_execute(ft0);
+  fftwl_execute(ft1);
   memcpy(data[1], tmpc[0], state.number_modes*sizeof(fftwl_complex));
-  complex_array_out("Q0.txt", data[0]);
+  memcpy(data[0], tmpc[1], state.number_modes*sizeof(fftwl_complex));
+  complex_array_out("Q1.txt", data[0]);
   complex_array_out("V1.txt", data[1]);
 }
 

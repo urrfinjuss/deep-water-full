@@ -194,11 +194,11 @@ void rk6_step(fftwl_complex *inQ, fftwl_complex *inV, long double dt) {
 
 void evolve_rk6() {
   unsigned int		QC_pass = 1;
-  unsigned long 	counter = 0, j = 0, skip = 80;
+  unsigned long 	counter = 0, j = 0, skip = 100;
   unsigned long		ref_counter = 0;
   char 			filename1[80];
   char 			filename2[80];
-  long double		M_TOL = 1.0E-15L;
+  long double		M_TOL = 2.0E-15L;
   long double		R_TOL = 4.0E-16L;
   long double		tshift = 0.L;
   long double   	time = 0.L, Ham = 0.L;
@@ -212,6 +212,9 @@ void evolve_rk6() {
   convertQtoZ(data[0], tmpc[5]);
   sprintf(filename1, "./data/surf_%04lu.txt", counter);
   surface_out(filename1, tmpc[5]);
+  if (PADE_TEST) {
+    exit(1);
+  }
   restore_potential(data[0], data[1], tmpc[5]);  
   fh_time = fopen("time_dependence.txt","a");
   fprintf(fh_time, "%.17LE\t%.17LE\t%.17LE\t", state.time, state.kineticE/PI, state.potentialE/PI); 
@@ -276,8 +279,8 @@ void evolve_rk6() {
         spec_out(filename1, tmpc[0], tmpc[1]);
         // write out surface shape and cut for Z
         convertQtoZ(data[0], tmpc[5]);
-        sprintf(filename2, "./roots/roots_Z%04lu.txt", counter);
-        optimal_pade(filename2, tmpc[5]);
+        /*sprintf(filename2, "./roots/roots_Z%04lu.txt", counter);
+        optimal_pade(filename2, tmpc[5]);*/
         sprintf(filename1, "./data/surf_%04lu.txt", counter);
         surface_out(filename1, tmpc[5]);
         // write out potential and its cut
@@ -290,28 +293,33 @@ void evolve_rk6() {
         printf("T = %23.16LE\tH = %23.16LE\n", state.time, Ham);
         sprintf(filename1, "./aux/data_%04lu.txt", counter);
         output_data(filename1, tmpc[5]);
+	/*
         sprintf(filename2, "./roots/roots_P%04lu.txt", counter);
         optimal_pade(filename2, tmpc[5]);
+	*/
         // write out cut for derivative of potential
         memcpy(tmpc[0], tmpc[5], state.number_modes*sizeof(fftwl_complex));        
         fftwl_execute(ift0);
         memset(tmpc[0] + state.number_modes/2, 0, state.number_modes*sizeof(fftwl_complex)/2);
-        for (unsigned long j = 0; j < state.number_modes/2; j++) tmpc[0][j] = -1.0IL*j*tmpc[0][j]/state.number_modes;
+        for (unsigned long j = 0; j < state.number_modes/2; j++) tmpc[0][j] = -1.0IL*j*tmpc[0][j]/state.number_modes; // this is derivative dq
         fftwl_execute(ft0);
+        for (unsigned long j = 0; j < state.number_modes; j++) tmpc[0][j] = tmpc[0][j]*conf.dq[j]; // this is derivative du
+
         sprintf(filename2, "./roots/roots_dP%04lu.txt", counter);
         optimal_pade(filename2, tmpc[0]);
 	// write out cut for R
-        for (unsigned long j = 0; j < state.number_modes; j++) tmpc[5][j] = data[0][j]*data[0][j];
+        /*for (unsigned long j = 0; j < state.number_modes; j++) tmpc[5][j] = data[0][j]*data[0][j];
         sprintf(filename2, "./roots/roots_R%04lu.txt", counter);
-        optimal_pade(filename2, tmpc[5]);
+        optimal_pade(filename2, tmpc[5]);*/
 	// write out cut for Zu
         for (unsigned long j = 0; j < state.number_modes; j++) tmpc[5][j] = 1.L/(data[0][j]*data[0][j]);
         sprintf(filename2, "./roots/roots_DZ%04lu.txt", counter);
         optimal_pade(filename2, tmpc[5]);
 	// write out cut for V
-        for (unsigned long j = 0; j < state.number_modes; j++) tmpc[5][j] = data[1][j];
+        /*for (unsigned long j = 0; j < state.number_modes; j++) tmpc[5][j] = data[1][j];
         sprintf(filename2, "./roots/roots_V%04lu.txt", counter);
         optimal_pade(filename2, tmpc[5]);
+	*/
       }
     }
   }

@@ -273,7 +273,7 @@ void compute_rational(unsigned long nD, unsigned long n_max_iter, fftwl_complex 
 
 void optimal_pade(char *str, fftwl_complex *in) {
 //  FILE *fh = fopen("pc_rate.txt","w");
-  unsigned long nd = 3, l_iters = 8;
+  unsigned long nd = 1, l_iters = 12;
   pade best_pade;  
   best_pade.l2_rel_err = 1.L;
   
@@ -285,8 +285,8 @@ void optimal_pade(char *str, fftwl_complex *in) {
     pade_data.n_lins = 0;
     compute_rational(nd, l_iters, in);
     deallocate_pade();
-//    if ((pade_data.l2_rel_err < best_pade.l2_rel_err)&&(best_pade.l2_rel_err > 1.0E-9L)) {
-    if (best_pade.l2_rel_err > 2.0E-8L) {
+    //if ((pade_data.l2_rel_err < best_pade.l2_rel_err)&&(best_pade.l2_rel_err > 4.0E-9L)) {
+    if (best_pade.l2_rel_err > 8.0E-10L) {
       best_pade.l2_rel_err = pade_data.l2_rel_err;
       best_pade.l2_abs_err = pade_data.l2_abs_err;
       best_pade.l2_nrm = pade_data.l2_nrm;
@@ -295,7 +295,8 @@ void optimal_pade(char *str, fftwl_complex *in) {
       //printf("Relative Error (nd = %3lu) = %11.5LE\n", nd, best_pade.l2_rel_err);
       //fprintf(fh, "%.3lu\t%11.5LE\n", nd, best_pade.l2_rel_err);
     } else {
-      nd = nd-2;
+      nd = nd-1;
+      //nd = 6;
       best_pade.n_poles = nd;
       pade_data.n_lins = 0;
       compute_rational(nd, l_iters, in);
@@ -469,6 +470,7 @@ void aberth_iter(unsigned int nD, char *str) {
       nrm += cabsl(t1[n])*cabsl(t1[n]);
     }
     nrm = sqrtl(nrm);
+    //printf("Newton error: %.Le\n", nrm);
     for (int j = 0; j < nD; j++) {
       tmp_r = t1[j]/t2[j]; 
       invC[j] = 0.L;
@@ -505,12 +507,14 @@ void aberth_iter(unsigned int nD, char *str) {
   fprintf(fh, "# 1. pole # 2.-3. z_k 4.-5. gamma_k\n");
   fprintf(fh, "# Time = %.12LE\tPade Rel. Error = %.12LE\n\n", state.time, pade_data.l2_rel_err);
   long double r0, r1, i0, i1;
+  fftwl_complex qK;
   for (int j = 0; j < nD; j++) {
     r0 = creall(2.L*catanl(conf.scaling*rts[j]));
-    r1 = creall(res[j]);
     i0 = cimagl(2.L*catanl(conf.scaling*rts[j]));
-    i1 = cimagl(res[j]);
-    fprintf(fh, "%3d\t%19.12LE\t%19.12LE\t%19.12LE\t%19.12LE\n", j, r0, i0, r1, i1);
+    r1 = creall(conf.scaling*res[j]);
+    i1 = cimagl(conf.scaling*res[j]);
+    qK = (r1 + 1.IL*i1)*cpowl(ccoshl(0.5L*(r0 + 1.IL*i0)),-2); // changed from 2 to -2
+    fprintf(fh, "%3d\t%19.12LE\t%19.12LE\t%19.12LE\t%19.12LE\n", j, r0, i0, creall(qK), cimagl(qK));
   }
   fclose(fh);
   nrm = sqrtl(nrm);
