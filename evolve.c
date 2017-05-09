@@ -194,7 +194,7 @@ void rk6_step(fftwl_complex *inQ, fftwl_complex *inV, long double dt) {
 
 void evolve_rk6() {
   unsigned int		QC_pass = 1;
-  unsigned long 	counter = 0, j = 0, skip = 100;
+  unsigned long 	counter = 0, j = 0, skip = 10;
   unsigned long		ref_counter = 0;
   char 			filename1[80];
   char 			filename2[80];

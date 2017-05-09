@@ -69,6 +69,7 @@ extern void fft_shift(fftwl_complex *in);
 // input.c
 extern void load_ascii();
 extern void set_initial_data();
+extern void set_initial_JW();
 extern void load_parameters(int argc, char *argv[]);
 extern void read_input(char *fname);
 

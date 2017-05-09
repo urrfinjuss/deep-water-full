@@ -13,10 +13,11 @@ int main( int argc, char* argv[]) {
   allocate_memory();			// allocate all memory		 //
 
   unsigned int format_flag = 0;
-  if (strcmp(state.txt_format,"ascii") == 0 )  format_flag = 1;
-  if (strcmp(state.txt_format,"binary") == 0 ) format_flag = 2;
-  if (strcmp(state.txt_format,"pade") == 0 )   format_flag = 3;
-  if (strcmp(state.txt_format,"none") == 0 )   format_flag = 4;
+  if (strcmp(state.txt_format,"ascii") == 0 )  		format_flag = 1;
+  if (strcmp(state.txt_format,"binary") == 0 ) 		format_flag = 2;
+  if (strcmp(state.txt_format,"pade") == 0 )   		format_flag = 3;
+  if (strcmp(state.txt_format,"none") == 0 )   		format_flag = 4;
+  if (strcmp(state.txt_format,"jon_wilkening") == 0 )   format_flag = 5;
  
   switch (format_flag) {
 
@@ -42,6 +43,16 @@ int main( int argc, char* argv[]) {
       printf("Starting new simulation\n");
       set_mapping();
       set_initial_data();
+      convertQtoZ(data[0], tmpc[5]);  
+      restore_potential(data[0], data[1], tmpc[2]);
+      break;
+
+    case 5: 
+      printf("Setting data from Jon Wilkening file format.\n");
+      set_mapping();
+      set_initial_JW();
+      convertQtoZ(data[0], tmpc[5]);  
+      restore_potential(data[0], data[1], tmpc[2]);
       break;
 
     default:
@@ -56,8 +67,6 @@ int main( int argc, char* argv[]) {
     //data[1][j] = 1.0IL*c*(1.L - data[0][j]*data[0][j]);
   //} 
   //complex_array_out("v-original.txt", data[1]);
-  convertQtoZ(data[0], tmpc[5]);  
-  restore_potential(data[0], data[1], tmpc[2]);
   //complex_array_out("pre.Phi.ph.txt", tmpc[2]); 
 
   //new_map.scaling 	= 0.025L;

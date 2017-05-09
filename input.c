@@ -131,6 +131,73 @@ void set_initial_data() {
   complex_array_out("V1.txt", data[1]);
 }
 
+void set_initial_JW() {
+  long double overN = 1.L/state.number_modes;
+  FILE *fh = fopen(state.restart_name,"r");
+  if (fh) {
+    printf("Restart file opened successfully.\n");
+    char line[512], *v[5];
+    for (int j = 0; j < 5; j++) v[j] = malloc(512);
+    if (fgets(line, 512, fh) != NULL);
+    if (fgets(line, 512, fh) != NULL);
+    if (fgets(line, 512, fh) != NULL) sscanf(line, "# %s\t%s\t%s\t%s\t%s", v[0], v[1], v[2], v[3], v[4]);
+    if (fgets(line, 512, fh) != NULL);
+    conf.scaling = 1.0L;
+    conf.image_offset = 0.0L;
+    long int counter = 0;
+    memset(data[0], 0, state.number_modes*sizeof(fftwl_complex));
+    memset(data[1], 0, state.number_modes*sizeof(fftwl_complex));
+    data[0][0] = 1.0IL*strtold(v[0], NULL);
+    data[1][0] = 0.0L*strtold(v[3], NULL);
+    while (fgets(line, 512, fh) != NULL) {
+      sscanf(line, "%s\t%s\t%s\t%s\n", v[0], v[1], v[2], v[3]);
+      data[0][counter+1] = 2.IL*(strtold(v[0], NULL) + 1.IL*strtold(v[1], NULL));
+      data[1][counter+1] = 2.0L*(strtold(v[2], NULL) - 1.IL*strtold(v[3], NULL));
+      data[0][state.number_modes-counter-1] = 0.L;
+      data[1][state.number_modes-counter-1] = 0.L;
+      if (cabsl(data[0][counter+1]) < 1e-14L) data[0][counter+1] = 0.L;
+      if (cabsl(data[1][counter+1]) < 1e-14L) data[1][counter+1] = 0.L;
+      //data[0][counter+1] = data[0][counter+1]*overN;
+      //data[1][counter+1] = data[1][counter+1]*overN;
+      counter++;
+      //printf("%s\t%s\t%s\t%s\n", v[0], v[1], v[2], v[3]);
+      //printf("%LE\t%LE\t", creall(data[0][counter]), cimagl(data[0][counter]));
+      //printf("%LE\t%LE\n", creall(data[1][counter]), cimagl(data[1][counter]));
+    }
+    if (counter > state.number_modes/2 - 1) {
+      printf("Number of Fourier in file %ld\n", 2*(counter+1));
+      printf("Requested in simulation is %ld\n", state.number_modes);
+    }
+    fclose(fh);
+  } else {
+    printf("Restart file not found.\n");
+  }
+  memcpy(tmpc[0], data[0], state.number_modes*sizeof(fftwl_complex));
+  //memcpy(tmpc[1], data[1], state.number_modes*sizeof(fftwl_complex));
+  fftwl_execute(ft0);
+  //fftwl_execute(ft1);
+  memcpy(data[0], tmpc[0], state.number_modes*sizeof(fftwl_complex));
+  //memcpy(data[1], tmpc[1], state.number_modes*sizeof(fftwl_complex));
+  /*
+  complex_array_out("jon_z.txt",   tmpc[0]); 
+  complex_array_out("jon_psi.txt", tmpc[1]);
+  output_data("all_jon", tmpc[1]); 
+  exit(1);
+  */
+  convertZtoQ(data[0], data[0]);
+  for (long int j = 0; j < state.number_modes/2; j++) {
+    tmpc[1][j] = -1.IL*j*data[1][j];
+  }  
+  fftwl_execute(ft1);
+  for (long int j = 0; j < state.number_modes; j++) {
+    data[1][j] = 1.IL*tmpc[1][j]*(data[0][j]*data[0][j]);
+  }
+  complex_array_out("Q1.txt", data[0]);
+  complex_array_out("V1.txt", data[1]);
+  //exit(1);
+}
+
+
 void load_ascii() {
   FILE *fh = fopen(state.restart_name, "r");
   if (fh) {
