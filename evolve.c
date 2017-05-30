@@ -194,12 +194,12 @@ void rk6_step(fftwl_complex *inQ, fftwl_complex *inV, long double dt) {
 
 void evolve_rk6() {
   unsigned int		QC_pass = 1;
-  unsigned long 	counter = 0, j = 0, skip = 10;
+  unsigned long 	counter = 0, j = 0, skip = 100;
   unsigned long		ref_counter = 0;
   char 			filename1[80];
   char 			filename2[80];
-  long double		M_TOL = 2.0E-15L;
-  long double		R_TOL = 4.0E-16L;
+  long double		M_TOL = 5.0E-15L;
+  long double		R_TOL = 1.0E-15L;
   long double		tshift = 0.L;
   long double   	time = 0.L, Ham = 0.L;
   long double   	dt = cfl*2.L*PI*conf.scaling/state.number_modes;

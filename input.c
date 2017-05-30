@@ -40,8 +40,8 @@ void set_initial_data() {
   //long double Q = 0.20L; // sim 6
   //long double Q = 0.001L; sim 10  // sim 8 and 9: Q = 2.5L;
   //long double C = -0.25L; sim 10  // sim 8 and 9: C = -0.02L;
-  long double Q = 0.50L; // pirate run 2.5L
-  long double C = -0.02L;
+  long double Q = 0.50L;  // pirate run 2.5L
+  long double C = -0.2L; // pirate run -0.02L
   // sim 10
   //fftwl_complex s1 = -1.0IL*ctanl(0.5L*0.050IL);
   //fftwl_complex s2 = -1.0IL*ctanl(0.5L*0.075IL);
@@ -65,7 +65,9 @@ void set_initial_data() {
   printf("Discriminant = %.12LE + I%.12LE\n", creall(Disc), cimagl(Disc));
   long double a1 = 0.045L, b1 = 0.050L, c1 = 0.055L;
   long double a2 = 0.070L, b2 = 0.075L, c2 = 0.080L;
-  a1 = 0.0050L; a2 = 0.0075L; // sim 11
+  a1 = 0.0050L; a2 = 0.0075L; Q = 2.50L;  C = -0.02L;  // sim 11
+  //a1 = 0.0050L; a2 = 0.0075L; Q = 0.01L; C = -0.02L;  // sim 14
+  a1 = 0.0050L; a2 = 0.0075L; Q = 0.004L; C = -0.02L;  // sim 18
 
   long double a3 = 0.2L; // sim 12
 
@@ -82,8 +84,9 @@ void set_initial_data() {
     data[1][j] = C*(data[0][j] - 1.L);
     data[0][j] = csqrtl(data[0][j]);
     // sims (initial Z-tilde)
-    data[0][j] =  clogl(  1.IL*cexpl(-1.IL*(u-1.IL*a3)) - 1.IL ) + 0.5IL*PI;  // sim 12
-    //data[0][j] =  clogl(1.IL*csinl(0.5L*(u-1.IL*a1))) -  clogl(1.IL*csinl(0.5L*(u-1.IL*a2)));  // sim 11: pirate run
+    //data[0][j] =  clogl(  1.IL*cexpl(-1.IL*(u-1.IL*a3)) - 1.IL ) + 0.5IL*PI;  // sim 12
+    //data[0][j] =  clogl(  1.IL*csinl(0.5L*(u-1.IL*a1))) - clogl(1.IL*csinl(0.5L*(u-1.IL*a2)));;  // sim 14 negative discriminant
+    data[0][j] =  clogl(1.IL*csinl(0.5L*(u-1.IL*a1))) -  clogl(1.IL*csinl(0.5L*(u-1.IL*a2)));  // sim 11: pirate run
     data[0][j] = -1.IL*Q*data[0][j]/1.L; 	// necessary (sim 11)
     // pade test for VZi
     tmpc[0][j] = data[1][j]*overN; 
