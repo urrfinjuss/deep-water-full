@@ -217,8 +217,8 @@ void evolve_rk6() {
   }
   restore_potential(data[0], data[1], tmpc[5]);  
   fh_time = fopen("time_dependence.txt","a");
-  fprintf(fh_time, "%.17LE\t%.17LE\t%.17LE\t", state.time, state.kineticE/PI, state.potentialE/PI); 
-  fprintf(fh_time, "%.17LE\t%.17LE\n", cimagl(state.momentum), creall(state.momentum)); 
+  fprintf(fh_time, "%25.17LE\t%25.17LE\t%25.17LE\t", state.time, state.kineticE/PI, state.potentialE/PI); 
+  fprintf(fh_time, "%25.17LE\t%25.17LE\n", cimagl(state.momentum), creall(state.momentum)); 
   fclose(fh_time);
   Ham = (state.kineticE + state.potentialE)/PI;
   sprintf(filename1, "./aux/data_%04lu.txt", counter);
@@ -286,8 +286,8 @@ void evolve_rk6() {
         // write out potential and its cut
         restore_potential(data[0], data[1], tmpc[5]);  
         fh_time = fopen("time_dependence.txt","a");
-        fprintf(fh_time, "%.17LE\t%.17LE\t%.17LE\t", state.time, state.kineticE/PI, state.potentialE/PI); 
-        fprintf(fh_time, "%.17LE\t%.17LE\n", cimagl(state.momentum), creall(state.momentum)); 
+        fprintf(fh_time, "%25.17LE\t%25.17LE\t%25.17LE\t", state.time, state.kineticE/PI, state.potentialE/PI); 
+        fprintf(fh_time, "%25.17LE\t%25.17LE\n", cimagl(state.momentum), creall(state.momentum)); 
         fclose(fh_time);
         Ham = (state.kineticE + state.potentialE)/PI;
         printf("T = %23.16LE\tH = %23.16LE\n", state.time, Ham);

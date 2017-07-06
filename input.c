@@ -33,60 +33,18 @@ void read_input(char *fname) {
 
 void set_initial_data() {
   long double overN = 1.L/state.number_modes;
-  long double q, u, xi;
+  long double q, u;
   long double fi = 0.0L*PI;
-
-  //long double Q = 0.01L; // sim 5
-  //long double Q = 0.20L; // sim 6
-  //long double Q = 0.001L; sim 10  // sim 8 and 9: Q = 2.5L;
-  //long double C = -0.25L; sim 10  // sim 8 and 9: C = -0.02L;
-  long double Q = 0.50L;  // pirate run 2.5L
-  long double C = -0.2L; // pirate run -0.02L
-  // sim 10
-  //fftwl_complex s1 = -1.0IL*ctanl(0.5L*0.050IL);
-  //fftwl_complex s2 = -1.0IL*ctanl(0.5L*0.075IL);
-  // sim 11
-  fftwl_complex s1 = -1.0IL*ctanl(0.5L*0.050IL);
-  fftwl_complex s2 = -1.0IL*ctanl(0.5L*0.075IL);
-  //
-  fftwl_complex Disc = -cpowl(s2-s1,2)*(1+Q*Q) + 2.L*Q*(s2-s1)*(1-s1*s2);
-  fftwl_complex r1 = (1.IL*(s1+s2) - csqrtl(Disc))/(2.L-Q*(s2-s1));
-  fftwl_complex r2 = (1.IL*(s1+s2) + csqrtl(Disc))/(2.L-Q*(s2-s1));
-  //fftwl_complex D = csqrtl(-0.25L*cpowl(a2-a1,2L)+Q*(a2-a1));
-  //fftwl_complex w1 = 0.5IL*(a1+a2) + D;
-  //fftwl_complex w2 = 0.5IL*(a1+a2) - D;
-  long double S = tanhl(0.5L*0.2L);
-
-
-  printf("s1 = %.12LE + I%.12LE\n", creall(s1), cimagl(s1));
-  printf("s2 = %.12LE + I%.12LE\n", creall(s2), cimagl(s2));
-  printf("r1 = %.12LE + I%.12LE\n", creall(r1), cimagl(r1));
-  printf("r2 = %.12LE + I%.12LE\n", creall(r2), cimagl(r2));
-  printf("Discriminant = %.12LE + I%.12LE\n", creall(Disc), cimagl(Disc));
-  long double a1 = 0.045L, b1 = 0.050L, c1 = 0.055L;
-  long double a2 = 0.070L, b2 = 0.075L, c2 = 0.080L;
-  a1 = 0.0050L; a2 = 0.0075L; Q = 2.50L;  C = -0.02L;  // sim 11
-  //a1 = 0.0050L; a2 = 0.0075L; Q = 0.01L; C = -0.02L;  // sim 14
-  a1 = 0.0050L; a2 = 0.0075L; Q = 0.004L; C = -0.02L;  // sim 18
-
-  long double a3 = 0.2L; // sim 12
+  long double C = -0.02L;  
+	fftwl_complex a1 =  0.0000L + 0.0040IL;
+	fftwl_complex a2 =  0.0160L + 0.0200IL;
+	fftwl_complex Q  =  0.0500L*cexpl(0.21IL*PI);
 
   for (long int j = 0; j < state.number_modes; j++) {
     q = 2.L*PI*(j*overN - 0.5L) - conf.origin_offset;
     u = conf.image_offset - fi + 2.L*atan2l(conf.scaling*sinl(0.5L*q),cosl(0.5L*q));
-    xi = tanl(0.5L*u);
-    // sims (proper periodic)
-    data[0][j] = 2.L*(xi-1.IL*s1)*(xi-1.IL*s2)/((2.L-Q*(s2-s1))*(xi-r1)*(xi-r2));
-    data[1][j] = C*(data[0][j] - 1.L);
-    data[0][j] = csqrtl(data[0][j]);
-    // sims (sim 12 lge pole)
-    data[0][j] = 2.L/(2.L + Q*S)*(1.L + 1.IL*Q*(1.L - S*S)/((2.L+Q*S)*xi - 1.IL*(2.L*S+Q)));
-    data[1][j] = C*(data[0][j] - 1.L);
-    data[0][j] = csqrtl(data[0][j]);
-    // sims (initial Z-tilde)
-    //data[0][j] =  clogl(  1.IL*cexpl(-1.IL*(u-1.IL*a3)) - 1.IL ) + 0.5IL*PI;  // sim 12
     //data[0][j] =  clogl(  1.IL*csinl(0.5L*(u-1.IL*a1))) - clogl(1.IL*csinl(0.5L*(u-1.IL*a2)));;  // sim 14 negative discriminant
-    data[0][j] =  clogl(1.IL*csinl(0.5L*(u-1.IL*a1))) -  clogl(1.IL*csinl(0.5L*(u-1.IL*a2)));  // sim 11: pirate run
+    data[0][j] =  clogl(1.IL*csinl(0.5L*(u-a1))) -  clogl(1.IL*csinl(0.5L*(u-a2)));  // sim 11: pirate run
     data[0][j] = -1.IL*Q*data[0][j]/1.L; 	// necessary (sim 11)
     // pade test for VZi
     tmpc[0][j] = data[1][j]*overN; 
@@ -135,7 +93,7 @@ void set_initial_data() {
 }
 
 void set_initial_JW() {
-  long double overN = 1.L/state.number_modes;
+  //long double overN = 1.L/state.number_modes;
   FILE *fh = fopen(state.restart_name,"r");
   if (fh) {
     printf("Restart file opened successfully.\n");
