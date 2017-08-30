@@ -32,7 +32,7 @@ void remap(map_ptr new_map, unsigned long int N) {
   long double beta = tanl(0.5L*(new_map->image_offset - conf.image_offset));
   long double overN0 = 1.L/state.number_modes;
   long double overN = 1.L/N;
-  long double R_TOL = 4.0E-16L;
+  long double R_TOL = 1.0E-14L;
   unsigned long int N0 = state.number_modes;
   unsigned int QC_pass = 0;
 
@@ -214,7 +214,7 @@ void track_singularity(fftwl_complex *inQ) {
   }  
   alt_map.origin_offset = q_max;
   alt_map.image_offset = conf.image_offset + 2.0L*atan2l(conf.scaling*sinl(0.5L*(q_max-conf.origin_offset)), cosl(0.5L*(q_max-conf.origin_offset)));
- // printf("max_Abs_d2Q = %.19LE\tq_max = %.19LE\tu_max = %.19LE\n", maxabsd2Q, q_max, alt_map.image_offset);
+ printf("max_Abs_d2Q = %.19LE\tq_max = %.19LE\tu_max = %.19LE\n", maxabsd2Q, q_max, alt_map.image_offset);
 }
 
 
