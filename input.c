@@ -222,7 +222,7 @@ void load_pade() {
     y0 = strtold(v[2], NULL);
     if (fgets(line, 512, fh) != NULL) sscanf(line, "# Amplitude at highest Fourier mode = %s\tPade error = %s\tH/lambda = %s\tc = %s\n", v[0], v[1], v[2], v[3]);
     speed = strtold(v[3], NULL);
-    printf("Wave Speed is %.12Le\n", speed);
+    //printf("Wave Speed is %.12Le\n", speed);
     if (fgets(line, 512, fh) != NULL);
 
     //N = strtol(v[0], NULL, 10);
@@ -232,8 +232,8 @@ void load_pade() {
     //conf.scaling = strtold(v[1], NULL);
     //conf.image_offset = strtold(v[2], NULL);
 
-    printf("Restart:\ntime = %.19LE\nN modes = %ld\n", T, state.number_modes); 
-    printf("Conformal L = %.19LE\nConformal u = %.19LE\n", conf.scaling, conf.image_offset);
+    //printf("Restart:\ntime = %.19LE\nN modes = %ld\n", T, state.number_modes); 
+    //printf("Conformal L = %.19LE\nConformal u = %.19LE\n", conf.scaling, conf.image_offset);
     int counter = 0;
     for (int j = 0; j < state.number_modes; j++) {
       data[0][j] = 1.IL*y0;
@@ -260,7 +260,7 @@ void load_pade() {
     printf("Missing restart file\n");
     exit(1);
   }
-  surface_out("initial_surface.txt",data[0]);
+  //surface_out("initial_surface.txt",data[0]);
   convertZtoQ(data[0], data[0]);
   for (int j = 0; j < state.number_modes; j++) {
     data[1][j] = 1.IL*speed*(1.L - data[0][j]*data[0][j]);
