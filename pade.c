@@ -273,21 +273,20 @@ void compute_rational(unsigned long nD, unsigned long n_max_iter, fftwl_complex 
 
 void optimal_pade(char *str, fftwl_complex *in) {
 //  FILE *fh = fopen("pc_rate.txt","w");
-  unsigned long nd = 2, l_iters = 10;
+  unsigned long nd = 1, l_iters = 12;
   pade best_pade;  
   best_pade.l2_rel_err = 1.L;
   
   //fprintf(fh, "# 1. nD, number poles 2. Error\n\n");
   //for (unsigned int nd = 1; nd < 32; nd++) {
-  while (nd < 128) {
-    nd++; 
-    //nd++;
+  while (nd < 32) {
+    nd++; //nd++;
     best_pade.n_poles = nd;
     pade_data.n_lins = 0;
     compute_rational(nd, l_iters, in);
     deallocate_pade();
     //if ((pade_data.l2_rel_err < best_pade.l2_rel_err)&&(best_pade.l2_rel_err > 4.0E-9L)) {
-    if (best_pade.l2_rel_err > 5.0E-9L) {
+    if (best_pade.l2_rel_err > 8.0E-10L) {
       best_pade.l2_rel_err = pade_data.l2_rel_err;
       best_pade.l2_abs_err = pade_data.l2_abs_err;
       best_pade.l2_nrm = pade_data.l2_nrm;
@@ -297,7 +296,6 @@ void optimal_pade(char *str, fftwl_complex *in) {
       //fprintf(fh, "%.3lu\t%11.5LE\n", nd, best_pade.l2_rel_err);
     } else {
       nd = nd-1;
-      //nd = nd-1;
       //nd = 6;
       best_pade.n_poles = nd;
       pade_data.n_lins = 0;
