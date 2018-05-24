@@ -24,7 +24,9 @@ void read_input(char *fname) {
       if (strcmp(name,"surface=") == 0) state.surface_tension = strtold(value, NULL);
       if (strcmp(name,"transfl=") == 0) conf.scaling = strtold(value, NULL);
       if (strcmp(name,"transfu=") == 0) conf.image_offset = strtold(value, NULL);
-      if (strcmp(name,"toleran=") == 0) state.tolerance = strtold (value, NULL);
+      //if (strcmp(name,"toleran=") == 0) state.tolerance = strtold (value, NULL);
+      if (strcmp(name,"cfl_num=") == 0) state.cfl = strtold (value, NULL);
+      if (strcmp(name,"skip_st=") == 0) state.skip = strtol(value, NULL, 10);
       if (strcmp(name,"timesim=") == 0) state.final_time = strtold (value, NULL);
       if (strcmp(name,"n_poles=") == 0) state.number_poles = atol(value);
     }
@@ -88,8 +90,8 @@ void set_initial_data() {
   fftwl_execute(ft1);
   memcpy(data[1], tmpc[0], state.number_modes*sizeof(fftwl_complex));
   memcpy(data[0], tmpc[1], state.number_modes*sizeof(fftwl_complex));
-  complex_array_out("Q1.txt", data[0]);
-  complex_array_out("V1.txt", data[1]);
+  //complex_array_out("Q1.txt", data[0]);
+  //complex_array_out("V1.txt", data[1]);
 }
 
 void set_initial_JW() {
@@ -189,7 +191,9 @@ void load_ascii() {
 	exit(1);
       }
       sscanf(line, "%s\t%s\t%s\t%s\t%s", v[0], v[1], v[2], v[3], v[4]);
-      data[0][counter] = strtold(v[1], NULL)-strtold(v[0], NULL) + 1.0IL*strtold(v[2],NULL);
+      //data[0][counter] = strtold(v[1], NULL)-strtold(v[0], NULL) + 1.0IL*strtold(v[2],NULL);
+      //data[1][counter] = strtold(v[3], NULL) + 1.0IL*strtold(v[4],NULL);
+      data[0][counter] = strtold(v[1], NULL) + 1.0IL*strtold(v[2],NULL);
       data[1][counter] = strtold(v[3], NULL) + 1.0IL*strtold(v[4],NULL);
       counter++;
     }
@@ -210,13 +214,11 @@ void load_pade() {
   long double		speed;
   if (fh) {
     char line[512], *v[5];
-    long double		T, y0;
+    long double		y0;
     long double 	overN = 1.L/state.number_modes;
 
     for (int j = 0; j < 5; j++) v[j] = malloc(512);
     if (fgets(line, 512, fh) != NULL);
-    //# M = 16384     Residual = 7.666871e-32 y0 = -2.93733978518518156291891533016033e-01
-    //# Amplitude at highest Fourier mode = 3.00000e-37	Pade error = 5.09180e-31        H/lambda = 1.31331355155599360515621709076606e-01	c = 1.0870000000000000e+00
 
     if (fgets(line, 512, fh) != NULL) sscanf(line, "# M = %s\tResidual = %s\ty0 = %s\n", v[0], v[1], v[2]);
     y0 = strtold(v[2], NULL);
@@ -227,7 +229,7 @@ void load_pade() {
 
     //N = strtol(v[0], NULL, 10);
     //T = strtold(v[3], NULL);
-    T = 0.L;
+    //T = 0.L;
 
     //conf.scaling = strtold(v[1], NULL);
     //conf.image_offset = strtold(v[2], NULL);
@@ -266,3 +268,8 @@ void load_pade() {
     data[1][j] = 1.IL*speed*(1.L - data[0][j]*data[0][j]);
   }
 }
+
+
+
+
+

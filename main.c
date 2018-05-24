@@ -25,6 +25,8 @@ int main( int argc, char* argv[]) {
       printf("Reading ASCII file\n");
       load_ascii();
       set_mapping();
+      convertQtoZ(data[0], tmpc[5]);  
+      restore_potential(data[0], data[1], tmpc[2]);
       break;
 
     case 2:

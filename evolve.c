@@ -6,7 +6,7 @@ static fftwl_complex 	**kv, *tV;
 
 static long double	cfl = 0.200L; // used to be 0.080L
 //static unsigned long    kz;
-static const unsigned long 	pD = 12;
+//static const unsigned long 	pD = 12;
 static const long double 	one_third        = 1.0L/3.0L;
 static const long double 	two_thirds       = 2.0L/3.0L;
 static const long double 	one_twelfth      = 1.0L/12.0L;
@@ -79,8 +79,8 @@ void compute_rhs(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *outQ, ff
   fftwl_execute(ft0);
   fftwl_execute(ft1);
   for (long int j = 0; j < N; j++) {
-    tmpc[2][j]= 2.L*creall(inV[j]*conjl(inQ[j]*inQ[j]))*overN;
-    tmpc[3][j]= inV[j]*conjl(inV[j])+4.L*sigma*conf.dq[j]*cimagl(tmpc[0][j]*conjl(inQ[j]));
+    tmpc[2][j]= 2.0L*creall(inV[j]*conjl(inQ[j]*inQ[j]))*overN;
+    tmpc[3][j]= inV[j]*conjl(inV[j])+4.0L*sigma*conf.dq[j]*cimagl(tmpc[0][j]*conjl(inQ[j]));
     tmpc[3][j]= tmpc[3][j]*overN;
   }
   //project(tmpc[3], tmpc[4]); 
@@ -127,8 +127,8 @@ void compute_rhs(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *outQ, ff
   // tmpc[3] <--  stores B'
   // tmpc[4] <--  stores U'
   for (long int j = 0; j < N; j++) {
-    outQ[j] = 0.5IL*conf.dq[j]*(2.L*tmpc[0][j]*tmpc[2][j]-tmpc[4][j]*inQ[j]);
-    outV[j] = g*(inQ[j]*inQ[j]-1.L)+1.IL*conf.dq[j]*(tmpc[2][j]*tmpc[1][j]-inQ[j]*inQ[j]*tmpc[3][j]);
+    outQ[j] = 0.5IL*conf.dq[j]*(2.L*tmpc[0][j]*tmpc[2][j] - tmpc[4][j]*inQ[j]);
+    outV[j] = g*(inQ[j]*inQ[j]-1.L) + 1.0IL*conf.dq[j]*(tmpc[2][j]*tmpc[1][j]-inQ[j]*inQ[j]*tmpc[3][j]);
   }
 }
 
@@ -208,8 +208,11 @@ void rk6_step(fftwl_complex *inQ, fftwl_complex *inV, long double dt) {
 }
 
 void evolve_rk6() {
+  cfl = state.cfl;
+  unsigned int 		skip = state.skip;
+
   unsigned int		QC_pass = 1;
-  unsigned long 	counter = 0, j = 0, skip = 500;
+  unsigned long 	counter = 0, j = 0;
   unsigned long		ref_counter = 0;
   char 			filename1[80];
   char 			filename2[80];
@@ -219,7 +222,8 @@ void evolve_rk6() {
   long double   	time = 0.L, Ham = 0.L;
   long double   	dt = cfl*2.L*PI*conf.scaling/state.number_modes;
   FILE *fh_time	= fopen("time_dependence.txt","w");
-  fprintf(fh_time, "# 1. time 2. Kinetic 3. Potential 4. Momentum X 5. Momentum Y\n\n");
+  //fprintf(fh_time, "# 1. time 2. Kinetic 3. Potential 4. Momentum X 5. Momentum Y\n\n");
+  fprintf(fh_time, "# 1. time 2. Kinetic 3. Potential 4. Surface\n\n");
   fclose(fh_time);
   map_quality_fourier(data[0], data[1], M_TOL, &QC_pass);
   sprintf(filename2, "./data/spec_%04lu.txt", counter);
@@ -232,10 +236,15 @@ void evolve_rk6() {
   }
   restore_potential(data[0], data[1], tmpc[5]);  
   fh_time = fopen("time_dependence.txt","a");
-  fprintf(fh_time, "%.17LE\t%.17LE\t%.17LE\t", state.time, state.kineticE/PI, state.potentialE/PI); 
-  fprintf(fh_time, "%.17LE\t%.17LE\n", cimagl(state.momentum), creall(state.momentum)); 
+  fprintf(fh_time, "%.17LE\t", state.time); 
+  fprintf(fh_time, "%.17LE\t", state.kineticE/PI); 
+  fprintf(fh_time, "%.17LE\t", state.potentialE/PI); 
+  fprintf(fh_time, "%.17LE\t", state.surfaceE/PI); 
+  //fprintf(fh_time, "%.17LE\t", cimagl(state.momentum)); 
+  //fprintf(fh_time, "%.17LE\t", creall(state.momentum)); 
+  fprintf(fh_time, "\n"); 
   fclose(fh_time);
-  Ham = (state.kineticE + state.potentialE)/PI;
+  Ham = (state.kineticE + state.potentialE + state.surfaceE);
   sprintf(filename1, "./aux/data_%04lu.txt", counter);
   output_data(filename1, tmpc[5]);
   printf("T = %23.16LE\tH = %23.16LE\n", state.time, Ham);
@@ -284,7 +293,7 @@ void evolve_rk6() {
       }
       if (QC_pass == 1) {
         restore_potential(data[0], data[1], tmpc[2]);  
-        Ham = (state.kineticE + state.potentialE)/PI;
+        Ham = (state.kineticE + state.potentialE + state.surfaceE);
         printf("T = %23.16LE\tH = %23.16LE\n", state.time, Ham);
         tshift += time;
         j = 0;
@@ -296,7 +305,7 @@ void evolve_rk6() {
 	exit(1);
       }
     } else {
-      if ( !((j+1) % skip) ) {
+      if ( !((j) % skip) ) {
         counter++;
         // write out spectrum
         sprintf(filename1, "./data/spec_%04lu.txt", counter);
@@ -310,45 +319,18 @@ void evolve_rk6() {
         // write out potential and its cut
         restore_potential(data[0], data[1], tmpc[5]);  
         fh_time = fopen("time_dependence.txt","a");
-        fprintf(fh_time, "%.17LE\t%.17LE\t%.17LE\t", state.time, state.kineticE/PI, state.potentialE/PI); 
-        fprintf(fh_time, "%.17LE\t%.17LE\n", cimagl(state.momentum), creall(state.momentum)); 
+        fprintf(fh_time, "%.17LE\t", state.time); 
+        fprintf(fh_time, "%.17LE\t", state.kineticE/PI); 
+        fprintf(fh_time, "%.17LE\t", state.potentialE/PI); 
+        fprintf(fh_time, "%.17LE\t", state.surfaceE/PI); 
+        //fprintf(fh_time, "%.17LE\t", cimagl(state.momentum)); 
+        //fprintf(fh_time, "%.17LE\t", creall(state.momentum)); 
+        fprintf(fh_time, "\n"); 
         fclose(fh_time);
-        Ham = (state.kineticE + state.potentialE)/PI;
+        Ham = (state.kineticE + state.potentialE + state.surfaceE);
         printf("T = %23.16LE\tH = %23.16LE\n", state.time, Ham);
         sprintf(filename1, "./aux/data_%04lu.txt", counter);
         output_data(filename1, tmpc[5]);
-	/*
-        sprintf(filename2, "./roots/roots_P%04lu.txt", counter);
-        optimal_pade(filename2, tmpc[5]);
-	*/
-        // write out cut for derivative of potential
-        /*
-        memcpy(tmpc[0], tmpc[5], state.number_modes*sizeof(fftwl_complex));        
-        fftwl_execute(ift0);
-        memset(tmpc[0] + state.number_modes/2, 0, state.number_modes*sizeof(fftwl_complex)/2);
-        for (unsigned long j = 0; j < state.number_modes/2; j++) tmpc[0][j] = -1.0IL*j*tmpc[0][j]/state.number_modes; // this is derivative dq
-        fftwl_execute(ft0);
-        for (unsigned long j = 0; j < state.number_modes; j++) tmpc[0][j] = tmpc[0][j]*conf.dq[j]; // this is derivative du
-        sprintf(filename2, "./roots/roots_dP%04lu.txt", counter);
-        optimal_pade(filename2, tmpc[0]);
-        */
-       
-	// write out cut for R
-        /*for (unsigned long j = 0; j < state.number_modes; j++) tmpc[5][j] = data[0][j]*data[0][j];
-        sprintf(filename2, "./roots/roots_R%04lu.txt", counter);
-        optimal_pade(filename2, tmpc[5]);*/
-
-	// write out cut for Zu
-	/*
-        for (unsigned long j = 0; j < state.number_modes; j++) tmpc[5][j] = 1.L/(data[0][j]*data[0][j]);
-        sprintf(filename2, "./roots/roots_DZ%04lu.txt", counter);
-        optimal_pade(filename2, tmpc[5]);
-        */
-	// write out cut for V
-        /*for (unsigned long j = 0; j < state.number_modes; j++) tmpc[5][j] = data[1][j];
-        sprintf(filename2, "./roots/roots_V%04lu.txt", counter);
-        optimal_pade(filename2, tmpc[5]);
-	*/
       }
     }
   }

@@ -23,14 +23,17 @@ typedef struct input {
   long double tolerance;		// tolerance for refinement
   long double mean_level;		// mean level fluid
   long double kineticE;			// kinetic energy
+  long double surfaceE;			// kinetic energy
   long double potentialE;		// potential energy
   long double final_time;		// simulation time
   long double time;			// stores current time
+  long double cfl;			// cfl condition
   fftwl_complex momentum;		// momentum P = px + i*py
   unsigned long int refinement_counter;	// refinement counter
   unsigned long int number_poles;	// number of poles
   unsigned long int number_modes;	// number of grid points
   unsigned long int kD;			// hyperV scale, set in evolve.c
+  unsigned long int skip;
 } params, *params_ptr;
 
 typedef struct conformal_mapping {

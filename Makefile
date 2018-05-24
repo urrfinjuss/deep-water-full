@@ -36,6 +36,9 @@ default: fsw
 fsw:
 	$(CC) $(OPT) $(DEF_FSW) $(INC_FSW) -c $(C_FSW)
 	$(LINK) $(OPT) $(OBJ_FSW) $(LIB_FSW) -o $(FSW)
+	mkdir -pv ./debug/
+	mkdir -pv ./demo/data
+	mkdir -pv ./demo/aux
 	cp fsw_dw.x ./debug/fsw_dw.x
 	cp fsw_dw.x ./demo/fsw_dw.x
 
