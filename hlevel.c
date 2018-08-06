@@ -29,7 +29,7 @@ void project(fftwl_complex *in, fftwl_complex *out) {
 void restore_potential(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *out){
   long double overN = 1.L/state.number_modes;
   long double K = 0.L, S = 0.L;
-  fftwl_complex P = 0.L, z0 = 0.L;
+  fftwl_complex z0 = 0.L;
   long int k = 0;
 
   convertQtoZ(inQ, tmpc[5]); // tmpc[5] <- z-tilde
@@ -53,9 +53,7 @@ void restore_potential(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *ou
   tmpc[0][0] = z0;
   for (long int j = state.number_modes/2-1; j > 0; j--) {
     k = j + state.number_modes/2;
-    //K += cimagl(tmpc[0][j]*conjl(1.IL*j*tmpc[0][j]));
     K += j*tmpc[0][j]*conjl(tmpc[0][j]);
-    P += -0.5IL*j*tmpc[5][j]*conjl(tmpc[0][j]);
     S += 1.0L/cabsl(inQ[j]*inQ[j])/conf.dq[j];
     S += 1.0L/cabsl(inQ[k]*inQ[k])/conf.dq[k];
   }
@@ -63,14 +61,30 @@ void restore_potential(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *ou
   for (long int j = 0; j < state.number_modes; j++) {
     S += 1.0L/cabsl(inQ[j]*inQ[j])/conf.dq[j];
   }
-  //K = -1.L*PI*K;  
-  //state.kineticE = -1.L*PI*K;
   state.kineticE = 0.25L*K;
   state.surfaceE = state.surface_tension*S*overN;
-  state.momentum = P;
   fftwl_execute(ft0);
   memcpy(out, tmpc[0], state.number_modes*sizeof(fftwl_complex));
 }
+
+void get_momentum(fftwl_complex *inQ, fftwl_complex *inV) {
+  long double 	overN = 1.L/state.number_modes;
+  fftwl_complex	P = 0.L;
+  
+  for (long int j = 0; j < state.number_modes; j++) {
+    tmpc[0][j] = 1.L/(inQ[j]*inQ[j])*overN;
+    tmpc[1][j] = -1.IL*inV[j]*tmpc[0][j];
+  }  
+  fftwl_execute(ift0);
+  fftwl_execute(ift1);
+
+  for (long int j = state.number_modes-1; j > 0; j--) {
+    P += tmpc[0][j]*conjl(tmpc[1][j])/j;
+  }
+  state.momentum = PI*P;
+
+}
+
 
 void convertQtoZ(fftwl_complex *in, fftwl_complex *out) {
   // computes Z from Q by series inversion of equation:	   //

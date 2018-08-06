@@ -14,7 +14,7 @@ OPT     = -march=native -std=gnu99 -O2 -ffast-math -mfpmath=sse+387 -Wall -Wpoin
 #generic
 
 LIB_MPI         =
-LIB_FFT         = -L$(HOME)/usr/lib  -lfftw3l_threads -lfftw3l -lm -lpthread
+LIB_FFT         = -L$(HOME)/usr/lib -lfftw3l -lm -lpthread
 INC_MPI         =
 INC_FFT         = -I$(HOME)/usr/include
 LIB_ADD         =

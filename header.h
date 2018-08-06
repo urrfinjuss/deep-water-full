@@ -92,6 +92,7 @@ extern void project(fftwl_complex *in, fftwl_complex *out);
 extern void convertZtoQ(fftwl_complex *in, fftwl_complex *out);
 extern void convertQtoZ(fftwl_complex *in, fftwl_complex *out);
 extern void restore_potential(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *out);
+extern void get_momentum(fftwl_complex *inQ, fftwl_complex *inV);
 
 // mapping.c
 extern void set_mapping();

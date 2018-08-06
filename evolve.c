@@ -223,7 +223,7 @@ void evolve_rk6() {
   long double   	dt = cfl*2.L*PI*conf.scaling/state.number_modes;
   FILE *fh_time	= fopen("time_dependence.txt","w");
   //fprintf(fh_time, "# 1. time 2. Kinetic 3. Potential 4. Momentum X 5. Momentum Y\n\n");
-  fprintf(fh_time, "# 1. time 2. Kinetic 3. Potential 4. Surface\n\n");
+  fprintf(fh_time, "# 1. time 2. Kinetic 3. Potential 4. Surface 5. Momentum X,Y\n\n");
   fclose(fh_time);
   map_quality_fourier(data[0], data[1], M_TOL, &QC_pass);
   sprintf(filename2, "./data/spec_%04lu.txt", counter);
@@ -235,13 +235,14 @@ void evolve_rk6() {
     exit(1);
   }
   restore_potential(data[0], data[1], tmpc[5]);  
+  get_momentum(data[0], data[1]);
   fh_time = fopen("time_dependence.txt","a");
-  fprintf(fh_time, "%.17LE\t", state.time); 
-  fprintf(fh_time, "%.17LE\t", state.kineticE/PI); 
-  fprintf(fh_time, "%.17LE\t", state.potentialE/PI); 
-  fprintf(fh_time, "%.17LE\t", state.surfaceE/PI); 
-  //fprintf(fh_time, "%.17LE\t", cimagl(state.momentum)); 
-  //fprintf(fh_time, "%.17LE\t", creall(state.momentum)); 
+  fprintf(fh_time, "%23.16LE\t", state.time); 
+  fprintf(fh_time, "%23.16LE\t", state.kineticE/PI); 
+  fprintf(fh_time, "%23.16LE\t", state.potentialE/PI); 
+  fprintf(fh_time, "%23.16LE\t", state.surfaceE/PI); 
+  fprintf(fh_time, "%23.16LE\t", cimagl(state.momentum)); 
+  fprintf(fh_time, "%23.16LE\t", creall(state.momentum)); 
   fprintf(fh_time, "\n"); 
   fclose(fh_time);
   Ham = (state.kineticE + state.potentialE + state.surfaceE);
@@ -318,13 +319,14 @@ void evolve_rk6() {
         surface_out(filename1, tmpc[5]);
         // write out potential and its cut
         restore_potential(data[0], data[1], tmpc[5]);  
-        fh_time = fopen("time_dependence.txt","a");
-        fprintf(fh_time, "%.17LE\t", state.time); 
-        fprintf(fh_time, "%.17LE\t", state.kineticE/PI); 
-        fprintf(fh_time, "%.17LE\t", state.potentialE/PI); 
-        fprintf(fh_time, "%.17LE\t", state.surfaceE/PI); 
-        //fprintf(fh_time, "%.17LE\t", cimagl(state.momentum)); 
-        //fprintf(fh_time, "%.17LE\t", creall(state.momentum)); 
+        get_momentum(data[0], data[1]);
+	fh_time = fopen("time_dependence.txt","a");
+        fprintf(fh_time, "%23.16LE\t", state.time); 
+        fprintf(fh_time, "%23.16LE\t", state.kineticE/PI); 
+        fprintf(fh_time, "%23.16LE\t", state.potentialE/PI); 
+        fprintf(fh_time, "%23.16LE\t", state.surfaceE/PI); 
+        fprintf(fh_time, "%23.16LE\t", cimagl(state.momentum)); 
+        fprintf(fh_time, "%23.16LE\t", creall(state.momentum)); 
         fprintf(fh_time, "\n"); 
         fclose(fh_time);
         Ham = (state.kineticE + state.potentialE + state.surfaceE);
