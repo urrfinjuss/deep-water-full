@@ -230,6 +230,21 @@ void evolve_rk6() {
   convertQtoZ(data[0], tmpc[5]);
   sprintf(filename1, "./data/surf_%04lu.txt", counter);
   surface_out(filename1, tmpc[5]);
+        /* Testing evaluate_anywhere */
+        memcpy(tmpc[0], tmpc[5], state.number_modes*sizeof(fftwl_complex));
+	for (long j = 0; j < state.number_modes; j++) tmpc[0][j] = tmpc[0][j]/state.number_modes;
+	fftwl_execute(ift0);
+	fftwl_complex f[2];
+	evaluate_anywhere(tmpc[0], 0.L, f);
+	printf("z-tilde = (%23.16LE, %23.16LE)\n", creall(f[0]), cimagl(f[0]));
+	printf("z_u     = (%23.16LE, %23.16LE)\n", 1.L+creall(f[1]), cimagl(f[1]));
+	evaluate_anywhere(tmpc[0], PI, f);
+	printf("z-tilde = (%23.16LE, %23.16LE)\n", creall(f[0]), cimagl(f[0]));
+	printf("z_u     = (%23.16LE, %23.16LE)\n", 1.L+creall(f[1]), cimagl(f[1]));
+	evaluate_anywhere(tmpc[0], 1.E-3L, f);
+	printf("z-tilde = (%23.16LE, %23.16LE)\n", creall(f[0]), cimagl(f[0]));
+	printf("z_u     = (%23.16LE, %23.16LE)\n", 1.L+creall(f[1]), cimagl(f[1]));
+	/*   END  */
   if (PADE_TEST) {
     exit(1);
   }
@@ -278,7 +293,7 @@ void evolve_rk6() {
       print_constants();
 
       map_quality_fourier(data[0], data[1], R_TOL, &QC_pass); 
-      spec_out("spec_after.txt", tmpc[0], tmpc[1]);
+      //spec_out("spec_after.txt", tmpc[0], tmpc[1]);
       if (QC_pass == 0) {
         printf("Doubling # of Modes: %lu\n", 2*state.number_modes);
         // Control Map 2: try to shift zoom location and L-scaling and double N(DO NOT REMOVE!)
@@ -316,6 +331,21 @@ void evolve_rk6() {
         optimal_pade(filename2, tmpc[5]);*/
         sprintf(filename1, "./data/surf_%04lu.txt", counter);
         surface_out(filename1, tmpc[5]);
+        /* Testing evaluate_anywhere */
+        memcpy(tmpc[0], tmpc[5], state.number_modes*sizeof(fftwl_complex));
+	for (long j = 0; j < state.number_modes; j++) tmpc[0][j] = tmpc[0][j]/state.number_modes;
+	fftwl_execute(ift0);
+	fftwl_complex f[2];
+	evaluate_anywhere(tmpc[0], 0.L, f);
+	printf("z-tilde = (%23.16LE, %23.16LE)\n", creall(f[0]), cimagl(f[0]));
+	printf("z_u     = (%23.16LE, %23.16LE)\n", 1.L+creall(f[1]), cimagl(f[1]));
+	evaluate_anywhere(tmpc[0], PI, f);
+	printf("z-tilde = (%23.16LE, %23.16LE)\n", creall(f[0]), cimagl(f[0]));
+	printf("z_u     = (%23.16LE, %23.16LE)\n", 1.L+creall(f[1]), cimagl(f[1]));
+	evaluate_anywhere(tmpc[0], 1.E-3L, f);
+	printf("z-tilde = (%23.16LE, %23.16LE)\n", creall(f[0]), cimagl(f[0]));
+	printf("z_u     = (%23.16LE, %23.16LE)\n", 1.L+creall(f[1]), cimagl(f[1]));
+	/*   END  */
         // write out potential and its cut
         restore_potential(data[0], data[1], tmpc[5]);  
         get_momentum(data[0], data[1]);

@@ -132,3 +132,7 @@ extern void deallocate_timemarching();
 extern void rk6_step(fftwl_complex *inQ, fftwl_complex *inV, long double dt);
 extern void evolve_rk6();
 
+// postprocess.c
+/* Collection of functions to match Stokes wave to the numerical data */
+extern void minmax_ongrid(long double *in, long *imax, long *imin);
+extern void evaluate_anywhere(fftwl_complex *in, fftwl_complex w, fftwl_complex *f);
