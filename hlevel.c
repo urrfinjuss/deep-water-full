@@ -110,18 +110,22 @@ void get_hamiltonian(fftwl_complex *inQ, fftwl_complex *inV) {
 
 void get_momentum(fftwl_complex *inQ, fftwl_complex *inV) {
   long double 	overN = 1.L/state.number_modes;
+  long int 	Np = state.number_modes;
   fftwl_complex	P = 0.L;
   
   for (long int j = 0; j < state.number_modes; j++) {
-    tmpc[0][j] = 1.L/(inQ[j]*inQ[j])*overN;
-    tmpc[1][j] = -1.IL*inV[j]*tmpc[0][j];
+    tmpc[0][j] =            1.L/(inQ[j]*inQ[j]*conf.dq[j])*overN;
+    tmpc[1][j] =  cimagl(inV[j]/(inQ[j]*inQ[j]*conf.dq[j]))*overN;
+    //tmpc[2][j] =   -1.IL*conjl(inV[j])/(inQ[j]*inQ[j]*conf.dq[j])*overN;
   }  
   fftwl_execute(ift0);
   fftwl_execute(ift1);
-  for (long int j = state.number_modes-1; j > 0; j--) {
-    P += tmpc[0][j]*conjl(tmpc[1][j])/j;
+  //fftwl_execute(ift2);
+  for (long int j = state.number_modes/2-1; j > 0; j--) {
+    P +=  tmpc[0][j]*conjl(tmpc[1][j])/j;
+    P += -tmpc[0][Np-j]*conjl(tmpc[1][Np-j])/j;
   }
-  state.momentum = PI*P;
+  state.momentum = 2.L*PI*P;
 }
 
 /*

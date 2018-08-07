@@ -222,7 +222,6 @@ void evolve_rk6() {
   long double   	time = 0.L, Ham = 0.L;
   long double   	dt = cfl*2.L*PI*conf.scaling/state.number_modes;
   FILE *fh_time	= fopen("time_dependence.txt","w");
-  //fprintf(fh_time, "# 1. time 2. Kinetic 3. Potential 4. Momentum X 5. Momentum Y\n\n");
   fprintf(fh_time, "# 1. time 2. Kinetic 3. Potential 4. Surface 5. Momentum X,Y\n\n");
   fclose(fh_time);
   map_quality_fourier(data[0], data[1], M_TOL, &QC_pass);
@@ -242,16 +241,15 @@ void evolve_rk6() {
   fprintf(fh_time, "%23.16LE\t", state.kineticE); 
   fprintf(fh_time, "%23.16LE\t", state.potentialE); 
   fprintf(fh_time, "%23.16LE\t", state.surfaceE); 
-  fprintf(fh_time, "%23.16LE\t", cimagl(state.momentum)); 
   fprintf(fh_time, "%23.16LE\t", creall(state.momentum)); 
+  fprintf(fh_time, "%23.16LE\t", cimagl(state.momentum)); 
   fprintf(fh_time, "\n"); 
   fclose(fh_time);
   Ham = (state.kineticE + state.potentialE + state.surfaceE);
   sprintf(filename1, "./aux/data_%04lu.txt", counter);
   output_data(filename1, tmpc[5]);
-  printf("T = %23.16LE\tH = %23.16LE\n", state.time, Ham);
+  printf("T = %23.16LE\tH = %23.16LE\tPx = %23.16LE\n", state.time, Ham, creall(state.momentum));
 
-  //*sqrtl(state.number_modes/4096.L)
   if (QC_pass == 0) {
     printf("Bad quality map at start.\tStop!\n");
     exit(1);
@@ -296,7 +294,7 @@ void evolve_rk6() {
       if (QC_pass == 1) {
         restore_potential(data[0], data[1], tmpc[2]);  
         Ham = (state.kineticE + state.potentialE + state.surfaceE);
-        printf("T = %23.16LE\tH = %23.16LE\n", state.time, Ham);
+        printf("T = %23.16LE\tH = %23.16LE\tPx = %23.16LE\n", state.time, Ham, creall(state.momentum));
         tshift += time;
         j = 0;
         cfl = 0.98L*cfl;
@@ -327,12 +325,12 @@ void evolve_rk6() {
         fprintf(fh_time, "%23.16LE\t", state.kineticE); 
         fprintf(fh_time, "%23.16LE\t", state.potentialE); 
         fprintf(fh_time, "%23.16LE\t", state.surfaceE); 
-        fprintf(fh_time, "%23.16LE\t", cimagl(state.momentum)); 
         fprintf(fh_time, "%23.16LE\t", creall(state.momentum)); 
+        fprintf(fh_time, "%23.16LE\t", cimagl(state.momentum)); 
         fprintf(fh_time, "\n"); 
         fclose(fh_time);
         Ham = (state.kineticE + state.potentialE + state.surfaceE);
-        printf("T = %23.16LE\tH = %23.16LE\n", state.time, Ham);
+        printf("T = %23.16LE\tH = %23.16LE\tPx = %23.16LE\n", state.time, Ham, creall(state.momentum));
         sprintf(filename1, "./aux/data_%04lu.txt", counter);
         output_data(filename1, tmpc[5]);
       }
