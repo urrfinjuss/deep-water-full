@@ -230,21 +230,9 @@ void evolve_rk6() {
   convertQtoZ(data[0], tmpc[5]);
   sprintf(filename1, "./data/surf_%04lu.txt", counter);
   surface_out(filename1, tmpc[5]);
-        /* Testing evaluate_anywhere */
-        memcpy(tmpc[0], tmpc[5], state.number_modes*sizeof(fftwl_complex));
-	for (long j = 0; j < state.number_modes; j++) tmpc[0][j] = tmpc[0][j]/state.number_modes;
-	fftwl_execute(ift0);
-	fftwl_complex f[2];
-	evaluate_anywhere(tmpc[0], 0.L, f);
-	printf("z-tilde = (%23.16LE, %23.16LE)\n", creall(f[0]), cimagl(f[0]));
-	printf("z_u     = (%23.16LE, %23.16LE)\n", 1.L+creall(f[1]), cimagl(f[1]));
-	evaluate_anywhere(tmpc[0], PI, f);
-	printf("z-tilde = (%23.16LE, %23.16LE)\n", creall(f[0]), cimagl(f[0]));
-	printf("z_u     = (%23.16LE, %23.16LE)\n", 1.L+creall(f[1]), cimagl(f[1]));
-	evaluate_anywhere(tmpc[0], 1.E-3L, f);
-	printf("z-tilde = (%23.16LE, %23.16LE)\n", creall(f[0]), cimagl(f[0]));
-	printf("z_u     = (%23.16LE, %23.16LE)\n", 1.L+creall(f[1]), cimagl(f[1]));
-	/*   END  */
+  
+  find_peak();
+  
   if (PADE_TEST) {
     exit(1);
   }
