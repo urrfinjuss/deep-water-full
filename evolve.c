@@ -236,11 +236,12 @@ void evolve_rk6() {
   }
   restore_potential(data[0], data[1], tmpc[5]);  
   get_momentum(data[0], data[1]);
+  get_hamiltonian(data[0], data[1]);
   fh_time = fopen("time_dependence.txt","a");
   fprintf(fh_time, "%23.16LE\t", state.time); 
-  fprintf(fh_time, "%23.16LE\t", state.kineticE/PI); 
-  fprintf(fh_time, "%23.16LE\t", state.potentialE/PI); 
-  fprintf(fh_time, "%23.16LE\t", state.surfaceE/PI); 
+  fprintf(fh_time, "%23.16LE\t", state.kineticE); 
+  fprintf(fh_time, "%23.16LE\t", state.potentialE); 
+  fprintf(fh_time, "%23.16LE\t", state.surfaceE); 
   fprintf(fh_time, "%23.16LE\t", cimagl(state.momentum)); 
   fprintf(fh_time, "%23.16LE\t", creall(state.momentum)); 
   fprintf(fh_time, "\n"); 
@@ -320,11 +321,12 @@ void evolve_rk6() {
         // write out potential and its cut
         restore_potential(data[0], data[1], tmpc[5]);  
         get_momentum(data[0], data[1]);
+  	get_hamiltonian(data[0], data[1]);
 	fh_time = fopen("time_dependence.txt","a");
         fprintf(fh_time, "%23.16LE\t", state.time); 
-        fprintf(fh_time, "%23.16LE\t", state.kineticE/PI); 
-        fprintf(fh_time, "%23.16LE\t", state.potentialE/PI); 
-        fprintf(fh_time, "%23.16LE\t", state.surfaceE/PI); 
+        fprintf(fh_time, "%23.16LE\t", state.kineticE); 
+        fprintf(fh_time, "%23.16LE\t", state.potentialE); 
+        fprintf(fh_time, "%23.16LE\t", state.surfaceE); 
         fprintf(fh_time, "%23.16LE\t", cimagl(state.momentum)); 
         fprintf(fh_time, "%23.16LE\t", creall(state.momentum)); 
         fprintf(fh_time, "\n"); 

@@ -61,32 +61,7 @@ int main( int argc, char* argv[]) {
       printf("Unknown text format\n");
       exit(1);
   }
-  //complex_array_out("zt-original.txt", data[0]);
-  //convertZtoQ(data[0], data[0]);
-  //complex_array_out("q-original.txt", data[0]);
-  //long double c = 0.5L;
-  //for (long int j = 0; j < state.number_modes; j++) {
-    //data[1][j] = 1.0IL*c*(1.L - data[0][j]*data[0][j]);
-  //} 
-  //complex_array_out("v-original.txt", data[1]);
-  //complex_array_out("pre.Phi.ph.txt", tmpc[2]); 
-
-  //new_map.scaling 	= 0.025L;
-  //new_map.image_offset 	= 0.0L;
-  //remap(&new_map, 2048); 
-  //convertQtoZ(data[0], tmpc[5]);  
-  //complex_array_out("zt-recovered-2.txt", tmpc[5]);
-  //restore_potential(data[0], data[1], tmpc[3]);  
   print_constants();
-  //allocate_pade(3);
-  //exit(1);
-  //rk6_step(data[0], data[1], 0.05);
-  //convertQtoZ(data[0], tmpc[5]);  
-  //complex_array_out("zt-after-step.txt", tmpc[5]);
-  //restore_potential(data[0], data[1], tmpc[3]);  
-  //print_constants();
-  //convertQtoZ(data[0], tmpc[5]);  
-  //complex_array_out("zt-recovered.txt", tmpc[5]);
   evolve_rk6(data[0], data[1]);
 
 }
