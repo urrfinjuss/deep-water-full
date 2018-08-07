@@ -61,8 +61,7 @@ void restore_potential(fftwl_complex *inQ, fftwl_complex *inV, fftwl_complex *ou
   for (long int j = 0; j < state.number_modes; j++) {
     S += 1.0L/cabsl(inQ[j]*inQ[j])/conf.dq[j];
   }
-  //state.kineticE = 0.25L*K;
-  state.surfaceE = state.surface_tension*S*overN;
+  //state.surfaceE = state.surface_tension*S*overN;
   fftwl_execute(ft0);
   memcpy(out, tmpc[0], state.number_modes*sizeof(fftwl_complex));
 }
@@ -73,13 +72,11 @@ void get_hamiltonian(fftwl_complex *inQ, fftwl_complex *inV) {
   /*  -------  Get Kinetic Energy --------- */ 
   state.kineticE = 0.L;
   for (long int j = 0; j < state.number_modes; j++) {
-    tmpc[0][j] = 1.L/(inQ[j]*inQ[j])*overN;
-    tmpc[1][j] = -1.IL*inV[j]*tmpc[0][j];
+    tmpc[1][j] = -1.IL*inV[j]*overN/(inQ[j]*inQ[j]*conf.dq[j]);
   }  
   /* --------------------------------------  */
   /* tmpc[0] has z_u, and tmpc[1] has \Phi_u */
   /* --------------------------------------  */
-  fftwl_execute(ift0);
   fftwl_execute(ift1);
   for (long int j = state.number_modes-1; j > 0; j--) {
     state.kineticE += tmpc[1][j]*conjl(tmpc[1][j])/j;
