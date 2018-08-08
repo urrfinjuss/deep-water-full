@@ -221,19 +221,19 @@ void evolve_rk6() {
   long double		tshift = 0.L;
   long double   	time = 0.L, Ham = 0.L;
   long double   	dt = cfl*2.L*PI*conf.scaling/state.number_modes;
-  FILE *fh_time	= fopen("time_dependence.txt","w");
-  fprintf(fh_time, "# 1. time 2. Kinetic 3. Potential 4. Surface 5. Momentum X,Y\n\n");
-  fclose(fh_time);
+ 
+  create_motion_constants("integrals.txt");
+  create_peak_coordinates("peak.txt");
+
   map_quality_fourier(data[0], data[1], M_TOL, &QC_pass);
   sprintf(filename2, "./data/spec_%04lu.txt", counter);
   spec_out(filename2, tmpc[0], tmpc[1]);
   convertQtoZ(data[0], tmpc[5]);
   sprintf(filename1, "./data/surf_%04lu.txt", counter);
   surface_out(filename1, tmpc[5]);
-  
 
-  fftwl_complex z_xtr[4];
-  find_peak(tmpc[5], z_xtr);
+  init_find_peaks(tmpc[5]);  
+  find_peak(tmpc[5]);
   
   if (PADE_TEST) {
     exit(1);
@@ -241,15 +241,9 @@ void evolve_rk6() {
   restore_potential(data[0], data[1], tmpc[5]);  
   get_momentum(data[0], data[1]);
   get_hamiltonian(data[0], data[1]);
-  fh_time = fopen("time_dependence.txt","a");
-  fprintf(fh_time, "%23.16LE\t", state.time); 
-  fprintf(fh_time, "%23.16LE\t", state.kineticE); 
-  fprintf(fh_time, "%23.16LE\t", state.potentialE); 
-  fprintf(fh_time, "%23.16LE\t", state.surfaceE); 
-  fprintf(fh_time, "%23.16LE\t", creall(state.momentum)); 
-  fprintf(fh_time, "%23.16LE\t", cimagl(state.momentum)); 
-  fprintf(fh_time, "\n"); 
-  fclose(fh_time);
+  append_motion_constants("integrals.txt");
+  append_peak_coordinates("peak.txt");
+  
   Ham = (state.kineticE + state.potentialE + state.surfaceE);
   sprintf(filename1, "./aux/data_%04lu.txt", counter);
   output_data(filename1, tmpc[5]);
@@ -322,24 +316,17 @@ void evolve_rk6() {
         sprintf(filename1, "./data/surf_%04lu.txt", counter);
         surface_out(filename1, tmpc[5]);
         
-        fftwl_complex z_xtr[4];
-        find_peak(tmpc[5], z_xtr);
+        find_peak(tmpc[5]);
 	
 	
 	// write out potential and its cut
         restore_potential(data[0], data[1], tmpc[5]);  
         get_momentum(data[0], data[1]);
   	get_hamiltonian(data[0], data[1]);
-	fh_time = fopen("time_dependence.txt","a");
-        fprintf(fh_time, "%23.16LE\t", state.time); 
-        fprintf(fh_time, "%23.16LE\t", state.kineticE); 
-        fprintf(fh_time, "%23.16LE\t", state.potentialE); 
-        fprintf(fh_time, "%23.16LE\t", state.surfaceE); 
-        fprintf(fh_time, "%23.16LE\t", creall(state.momentum)); 
-        fprintf(fh_time, "%23.16LE\t", cimagl(state.momentum)); 
-        fprintf(fh_time, "\n"); 
-        fclose(fh_time);
-        Ham = (state.kineticE + state.potentialE + state.surfaceE);
+	append_motion_constants("integrals.txt");
+  	append_peak_coordinates("peak.txt");
+        
+	Ham = (state.kineticE + state.potentialE + state.surfaceE);
         printf("T = %23.16LE\tH = %23.16LE\tPx = %23.16LE\n", state.time, Ham, creall(state.momentum));
         sprintf(filename1, "./aux/data_%04lu.txt", counter);
         output_data(filename1, tmpc[5]);

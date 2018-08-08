@@ -22,9 +22,13 @@ typedef struct input {
   long double surface_tension;		// surface tension
   long double tolerance;		// tolerance for refinement
   long double mean_level;		// mean level fluid
+  
   long double kineticE;			// kinetic energy
   long double surfaceE;			// kinetic energy
   long double potentialE;		// potential energy
+
+  long double qmax, xmax, ymax;		// surface peak coordinates
+
   long double final_time;		// simulation time
   long double time;			// stores current time
   long double cfl;			// cfl condition
@@ -108,6 +112,10 @@ extern void surface_out(char *fname, fftwl_complex *in);
 extern void spec_out(char *fname, fftwl_complex *in1, fftwl_complex *in2);
 extern void output_data(char *fname, fftwl_complex *inPhi);
 extern void print_constants();
+extern void create_motion_constants(char *fname);
+extern void append_motion_constants(char *fname);
+extern void create_peak_coordinates(char *fname);
+extern void append_peak_coordinates(char *fname);
 
 // pade.c
 extern void init_pade();
@@ -137,6 +145,7 @@ extern void evolve_rk6();
 extern void minmax_ongrid(long double *in, long *imax, long *imin);
 extern void evaluate_anywhere(fftwl_complex *in, fftwl_complex w, fftwl_complex *f);
 extern long double newton_method(fftwl_complex *in, long double u0, long double tol, long *iter_count);
-extern void find_peak(fftwl_complex *inZ, fftwl_complex *z_xtr);
+extern void init_find_peaks(fftwl_complex *inZ);
+extern void find_peak(fftwl_complex *inZ);
 
 

@@ -1,5 +1,8 @@
 #include "header.h"
 
+static fftwl_complex z_xtr[4];
+static long double init_qmin, init_qmax;
+
 void minmax_ongrid(long double *in, long *imax, long *imin){
   long double 	mmax = in[0], mmin = in[0]; 
 	
@@ -59,8 +62,20 @@ long double newton_method(fftwl_complex *in, long double u0, long double tol, lo
   return u;
 }
 
-void find_peak(fftwl_complex *inZ, fftwl_complex *z_xtr) {
-  long		imin, imax, N = state.number_modes;
+void init_find_peaks(fftwl_complex *inZ) {
+  long 	imin, imax, N = state.number_modes;
+  
+  for (long j = 0; j < N; j++) {
+    tmpr[0][j] = cimagl(inZ[j]);
+  }
+  minmax_ongrid(tmpr[0], &imax, &imin);
+  init_qmin = PI*(2.L*imin/N - 1.L);
+  init_qmax = PI*(2.L*imax/N - 1.L);
+}
+
+void find_peak(fftwl_complex *inZ) {
+  //long		imin, imax;
+  long	 	N = state.number_modes;
   long		itmin, itmax;
   long double 	qmin, qmax;
 
@@ -71,19 +86,35 @@ void find_peak(fftwl_complex *inZ, fftwl_complex *z_xtr) {
   }
   fftwl_execute(ift0);
   fftwl_execute(ift1);
-  minmax_ongrid(tmpr[0], &imax, &imin);
+  /* ------  init qmin and qmax once and use from the previous step   ------ */
+  //printf("Estimate for max is %23.16Le\t and min is %23.16Le\n", qmax, qmin);
+  qmin = newton_method(tmpc[0], init_qmin, 1e-10L, &itmin);
+  qmax = newton_method(tmpc[0], init_qmax, 1e-10L, &itmax);
+  //printf("Initial guess %23.16Le and converged at %23.16Le\n", init_qmax, qmax);
+  init_qmin = qmin;
+  init_qmax = qmax; 
+  /* ------  end continuous setting of initial guess -----  */
 
+
+  /* ------  init qmin and qmax with on grid values every n-th step   ------ */
+  /*
+  minmax_ongrid(tmpr[0], &imax, &imin);
   qmin = PI*(2.L*imin/N - 1.L);
   qmax = PI*(2.L*imax/N - 1.L);
   //printf("Estimate for max is %23.16Le\t and min is %23.16Le\n", qmax, qmin);
-
   qmin = newton_method(tmpc[0], qmin, 1e-10L, &itmin);
   qmax = newton_method(tmpc[0], qmax, 1e-10L, &itmax);
+  */
+  /* ------  end ongrid setting of initial guess -----  */ 
+
   //printf("Minimum %23.16Le converged in %4ld iterations\n", qmin, itmin);
   //printf("Maximum %23.16Le converged in %4ld iterations\n", qmax, itmax);
   
   evaluate_anywhere(tmpc[1], qmax, &z_xtr[0]);
   evaluate_anywhere(tmpc[1], qmin, &z_xtr[2]);
+  state.qmax = qmax;
+  state.xmax = qmax + creall(z_xtr[0]);
+  state.ymax = cimagl(z_xtr[0]);
   //printf("Value at maximum (%23.16LE,%23.16LE)\n", qmax+creall(z_xtr[0]), cimagl(z_xtr[0]));
   //printf("Value at minimum (%23.16LE,%23.16LE)\n", qmin+creall(z_xtr[2]), cimagl(z_xtr[2]));
 }

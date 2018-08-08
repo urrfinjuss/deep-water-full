@@ -96,4 +96,38 @@ void print_constants() {
   printf("#\t\t\t------------------------------------------------------\t\t\t#\n");
 }
 
+void create_motion_constants(char *fname) {
+  FILE *fh = fopen(fname, "w");
+  fprintf(fh, "# 1. time 2. Kinetic 3. Potential");
+  fprintf(fh, " 4. Surface 5. Momentum X,Y\n\n");
+  fclose(fh);
+}
+
+void append_motion_constants(char *fname) {
+  FILE *fh = fopen(fname, "a");
+  fprintf(fh, "%23.16LE\t", state.time); 
+  fprintf(fh, "%23.16LE\t", state.kineticE); 
+  fprintf(fh, "%23.16LE\t", state.potentialE); 
+  fprintf(fh, "%23.16LE\t", state.surfaceE); 
+  fprintf(fh, "%23.16LE\t", creall(state.momentum)); 
+  fprintf(fh, "%23.16LE\t", cimagl(state.momentum)); 
+  fprintf(fh, "\n"); 
+  fclose(fh);
+}
+
+void create_peak_coordinates(char *fname) {
+  FILE *fh = fopen(fname, "w");
+  fprintf(fh, "# 1. time 2. q_max 3. X(q_max) 4. Y(q_max) \n\n");
+  fclose(fh);
+}
+
+void append_peak_coordinates(char *fname) {
+  FILE *fh = fopen(fname, "a");
+  fprintf(fh, "%23.16LE\t", state.time); 
+  fprintf(fh, "%23.16LE\t", state.qmax); 
+  fprintf(fh, "%23.16LE\t", state.xmax); 
+  fprintf(fh, "%23.16LE\t", state.ymax); 
+  fprintf(fh, "\n"); 
+  fclose(fh);
+}
 
