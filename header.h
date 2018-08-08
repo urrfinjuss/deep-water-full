@@ -137,6 +137,6 @@ extern void evolve_rk6();
 extern void minmax_ongrid(long double *in, long *imax, long *imin);
 extern void evaluate_anywhere(fftwl_complex *in, fftwl_complex w, fftwl_complex *f);
 extern long double newton_method(fftwl_complex *in, long double u0, long double tol, long *iter_count);
-extern void find_peak(fftwl_complex *inZ, fftwl_complex **z_xtr);
+extern void find_peak(fftwl_complex *inZ, fftwl_complex *z_xtr);
 
 

@@ -59,28 +59,31 @@ long double newton_method(fftwl_complex *in, long double u0, long double tol, lo
   return u;
 }
 
-void find_peak(fftwl_complex *inZ, fftwl_complex **z_xtr) {
-	long		imin, imax, N = state.number_modes;
-	long		itmin, itmax;
-	long double 	qmin, qmax;
+void find_peak(fftwl_complex *inZ, fftwl_complex *z_xtr) {
+  long		imin, imax, N = state.number_modes;
+  long		itmin, itmax;
+  long double 	qmin, qmax;
 
-	for (long j = 0; j < state.number_modes; j++) {
-	  tmpc[0][j] = cimagl(1.L/(data[0][j]*data[0][j]*state.number_modes));
-	  tmpr[0][j] = cimagl(inZ[j]);
-	}
-	fftwl_execute(ift0);
-	minmax_ongrid(tmpr[0], &imin, &imax);
-	
-	qmin = PI*(2.L*imin/N - 1.L);
-	qmax = PI*(2.L*imax/N - 1.L);
-	
-        qmin = newton_method(tmpc[0], qmin, 1e-10L, &itmin);
-        qmax = newton_method(tmpc[0], qmax, 1e-10L, &itmax);
-        printf("Find minimum converged in %4ld iterations\n", itmin);
-        printf("Find maximum converged in %4ld iterations\n", itmax);
+  for (long j = 0; j < state.number_modes; j++) {
+    tmpc[0][j] = cimagl(1.L/(data[0][j]*data[0][j]*N));
+    tmpc[1][j] = inZ[j]/N;
+    tmpr[0][j] = cimagl(inZ[j]);
+  }
+  fftwl_execute(ift0);
+  fftwl_execute(ift1);
+  minmax_ongrid(tmpr[0], &imax, &imin);
 
-	evaluate_anywhere(inZ, qmax, z_xtr[0]);
-	evaluate_anywhere(inZ, qmin, z_xtr[1]);
-	printf("Location of minimum (%23.16LE,%23.16LE)\n", creall(z_xtr[1][0]), cimagl(z_xtr[1][0]));
-	printf("Location of maximum (%23.16LE,%23.16LE)\n", creall(z_xtr[0][0]), cimagl(z_xtr[0][0]));
+  qmin = PI*(2.L*imin/N - 1.L);
+  qmax = PI*(2.L*imax/N - 1.L);
+  //printf("Estimate for max is %23.16Le\t and min is %23.16Le\n", qmax, qmin);
+
+  qmin = newton_method(tmpc[0], qmin, 1e-10L, &itmin);
+  qmax = newton_method(tmpc[0], qmax, 1e-10L, &itmax);
+  //printf("Minimum %23.16Le converged in %4ld iterations\n", qmin, itmin);
+  //printf("Maximum %23.16Le converged in %4ld iterations\n", qmax, itmax);
+  
+  evaluate_anywhere(tmpc[1], qmax, &z_xtr[0]);
+  evaluate_anywhere(tmpc[1], qmin, &z_xtr[2]);
+  //printf("Value at maximum (%23.16LE,%23.16LE)\n", qmax+creall(z_xtr[0]), cimagl(z_xtr[0]));
+  //printf("Value at minimum (%23.16LE,%23.16LE)\n", qmin+creall(z_xtr[2]), cimagl(z_xtr[2]));
 }
