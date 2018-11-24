@@ -32,7 +32,8 @@ void remap(map_ptr new_map, unsigned long int N) {
   long double beta = tanl(0.5L*(new_map->image_offset - conf.image_offset));
   long double overN0 = 1.L/state.number_modes;
   long double overN = 1.L/N;
-  long double R_TOL = 1.0E-10L;
+  long double R_TOL = 1.0E-10L; /* Local version */
+  //long double R_TOL = 4.0E-16L;  /* Thor version*/
   unsigned long int N0 = state.number_modes;
   unsigned int QC_pass = 0;
 
@@ -140,14 +141,16 @@ void remap(map_ptr new_map, unsigned long int N) {
   }
   fftwl_free(saveQ);
   fftwl_free(saveV); 
+  printf("Remapping\n");
 }
 
 void map_quality(fftwl_complex *in1, fftwl_complex *in2, long double tol, unsigned int *QC_pass) {
   long double qc_ratio	= 1.0L;
   //long double nqc_ratio	= 1.0L;
   unsigned long N = state.number_modes;
-  unsigned long ks = lroundl(7.L/12.L*(N/2)); //lroundl(2.L*state.kD/3.L);
-  unsigned long kf = lroundl(9.L/12.L*(N/2)); //	state.kD;
+  unsigned long ks = lroundl(7.L/12.L*(N/2)); /* -- local version  */
+  //unsigned long ks = lroundl(5.L/12.L*(N/2)); 	/* -- thor version   */
+  unsigned long kf = lroundl(9.L/12.L*(N/2)); 	/*	*/
   left_sum1	= 0.0L;
   left_sum2	= 0.0L;
   full_sum1	= 0.0L;
@@ -176,12 +179,16 @@ void map_quality(fftwl_complex *in1, fftwl_complex *in2, long double tol, unsign
     }
 
   }
-  qc_ratio = sqrtl((partial_sum1-left_sum1)/(1.L + full_sum1));
-  qc_ratio = fmaxl(qc_ratio, sqrtl((partial_sum2-left_sum2)/sqrtl(1.L+full_sum2)) );
+  // Local Version //
+  qc_ratio = sqrtl((partial_sum1-left_sum1)/(1.L + full_sum1));   			/* local version  */
+  qc_ratio = fmaxl(qc_ratio, sqrtl((partial_sum2-left_sum2)/sqrtl(1.L+full_sum2)) );	/* local version  */
+  // Thor Version   //
+  //qc_ratio = (partial_sum1-left_sum1)/sqrtl(1.L + powl(full_sum1, 2)); 			
+  //qc_ratio = fmaxl(qc_ratio, (partial_sum2-left_sum2)/sqrtl(1.L+powl(full_sum2, 2)));
   //inqc_ratio = narrow_sum1/sqrtl(1.L + powl(full_sum1, 2));
   //nqc_ratio = fmaxl(nqc_ratio, narrow_sum2/sqrtl(1.L+powl(full_sum2, 2)));
   if (qc_ratio < tol) {
-        //printf("QC Pass\nQC ratio is %.9LE\n", qc_ratio);
+        //printf("QC ratio is %.9LE\n", qc_ratio);
 	*QC_pass = 1;
 	//if (nqc_ratio < tol) *QC_pass = 2;
   } else {
@@ -225,7 +232,8 @@ void track_singularity(fftwl_complex *inQ) {
     q_max = conf.origin_offset;
   }
   alt_map.image_offset = conf.image_offset + 2.0L*atan2l(conf.scaling*sinl(0.5L*(q_max-conf.origin_offset)), cosl(0.5L*(q_max-conf.origin_offset)));
- // printf("max_Abs_d2Q = %.19LE\tq_max = %.19LE\tu_max = %.19LE\n", maxabsd2Q, q_max, alt_map.image_offset);
+  // printf("max_Abs_d2Q = %.19LE\tq_max = %.19LE\tu_max = %.19LE\n", maxabsd2Q, q_max, alt_map.image_offset);
+  printf("Tracking Singularity\n");
 }
 
 

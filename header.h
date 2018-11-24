@@ -9,14 +9,14 @@
 #define MIN(a,b) ((a) < (b) ? a : b)
 
 #define FMODE FFTW_MEASURE	// changed from measure
-#define MOVE_MESH	0	// 0 if singularity tracking is off , 1 otherwise
+#define MOVE_MESH	1	// 0 if singularity tracking is off , 1 otherwise
 #define PADE_TEST	0
 #define PADE_FLAG	0
 #define PI acosl(-1.0L)
 // --------  Structures
 typedef struct input {
   char restart_name[128];		// restart filename 
-  char txt_format[64];			// format of text file (pade, ascii, none)
+  char txt_format[128];			// format of text file (pade, ascii, none)
   char time_march[64];			// time-marching (rk4)
   long double gravity;			// free fall acceleration
   long double surface_tension;		// surface tension
@@ -109,7 +109,7 @@ extern void track_singularity(fftwl_complex *inQ);
 extern void real_array_out(char* fname, long double *in);
 extern void complex_array_out(char *fname, fftwl_complex *in);
 extern void surface_out(char *fname, fftwl_complex *in);
-extern void spec_out(char *fname, fftwl_complex *in1, fftwl_complex *in2);
+extern void spec_out(char *fname);
 extern void output_data(char *fname, fftwl_complex *inPhi);
 extern void print_constants();
 extern void create_motion_constants(char *fname);

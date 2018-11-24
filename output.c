@@ -27,14 +27,26 @@ void complex_array_out(char *fname, fftwl_complex *in) {
   fclose(fh);
 }
 
-void spec_out(char *fname, fftwl_complex *in1, fftwl_complex *in2) {
+void spec_out(char *fname) {
   FILE 		*fh = fopen(fname,"w");
   long double 	overN = 1.L/state.number_modes;
 
-  fprintf(fh, "# 1. k 2. |a_k| 3. |b_k|\n");
+  for (long int j = 0; j < state.number_modes; j++) {
+    tmpc[0][j] = data[0][j]*overN;
+    tmpc[1][j] = data[1][j]*overN;
+    tmpc[2][j] = data[0][j]*data[0][j]*overN;
+  }
+  fftwl_execute(ift0);
+  fftwl_execute(ift1);
+  fftwl_execute(ift2);
+
+  fprintf(fh, "# 1. k 2. |Q_k| 3. |V_k| 4. |R_k|\n");
   fprintf(fh, "# Time = %.14LE\tL = %.14LE\n\n", state.time, conf.scaling);
   for (long int j = 0; j < state.number_modes; j++) {
-    fprintf(fh, "%ld\t%23.17LE\t%23.17LE\n", j, cabsl(in1[j])*overN, cabsl(in2[j])*overN);
+    fprintf(fh, "%7ld\t", j);
+    fprintf(fh, "%23.17LE\t", cabsl(tmpc[0][j]));
+    fprintf(fh, "%23.17LE\t", cabsl(tmpc[1][j]));
+    fprintf(fh, "%23.17LE\n", cabsl(tmpc[2][j]));
   }
   fclose(fh);
 }

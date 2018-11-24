@@ -216,18 +216,21 @@ void evolve_rk6() {
   unsigned long		ref_counter = 0;
   char 			filename1[80];
   char 			filename2[80];
-  long double		M_TOL = 5.0E-10L;
-  long double		R_TOL = 1.0E-10L;
+  long double		M_TOL = 5.0E-10L;  /* Local version  */
+  long double		R_TOL = 1.0E-10L;  /* Local version  */
+  //long double		M_TOL = 4.0E-15L;
+  //long double		R_TOL = 4.0E-16L;
   long double		tshift = 0.L;
   long double   	time = 0.L, Ham = 0.L;
-  long double   	dt = cfl*2.L*PI*conf.scaling/state.number_modes;
+  //long double   	dt = cfl*2.L*PI*conf.scaling/state.number_modes; normal version
+  long double   	dt = 5.L*cfl*conf.scaling/state.number_modes;
  
   create_motion_constants("integrals.txt");
   create_peak_coordinates("peak.txt");
 
   map_quality_fourier(data[0], data[1], M_TOL, &QC_pass);
   sprintf(filename2, "./data/spec_%04lu.txt", counter);
-  spec_out(filename2, tmpc[0], tmpc[1]);
+  spec_out(filename2);
   convertQtoZ(data[0], tmpc[5]);
   sprintf(filename1, "./data/surf_%04lu.txt", counter);
   surface_out(filename1, tmpc[5]);
@@ -269,7 +272,7 @@ void evolve_rk6() {
       restore_potential(data[0], data[1], tmpc[2]);
       // Control Map 1: try to shift zoom location and L-scaling (DO NOT REMOVE!)
       track_singularity(data[0]);
-      alt_map.scaling = conf.scaling/sqrt(2.L);
+      alt_map.scaling = conf.scaling/sqrt(2.00L); /* -- removed 2.L -> 1.2L for debug*/
       // End Control Map 1
 
       remap(&alt_map, state.number_modes);
@@ -277,19 +280,18 @@ void evolve_rk6() {
       print_constants();
 
       map_quality_fourier(data[0], data[1], R_TOL, &QC_pass); 
-      //spec_out("spec_after.txt", tmpc[0], tmpc[1]);
       if (QC_pass == 0) {
         printf("Doubling # of Modes: %lu\n", 2*state.number_modes);
-        // Control Map 2: try to shift zoom location and L-scaling and double N(DO NOT REMOVE!)
+        // Control Map 2: try to shift zoom location and double N, while holding L-scaling(DO NOT REMOVE!)
         track_singularity(data[0]);
-        alt_map.scaling = conf.scaling*sqrtl(2.L);
+	alt_map.scaling = conf.scaling*sqrtl(2.00L); /* -- 2.0L -> 1.0L  sigurd Sept 20, 2018i */
         // End Control Map 2
         remap(&alt_map, 2*state.number_modes);
-        skip = lroundl(1.5L*skip);
+	skip = lroundl(1.5L*skip);
         restore_potential(data[0], data[1], tmpc[2]);
         print_constants();
         map_quality_fourier(data[0], data[1], R_TOL, &QC_pass); 
-      }
+	}
       if (QC_pass == 1) {
         restore_potential(data[0], data[1], tmpc[2]);  
         Ham = (state.kineticE + state.potentialE + state.surfaceE);
@@ -308,17 +310,14 @@ void evolve_rk6() {
         counter++;
         // write out spectrum
         sprintf(filename1, "./data/spec_%04lu.txt", counter);
-        spec_out(filename1, tmpc[0], tmpc[1]);
+        spec_out(filename1);
         // write out surface shape and cut for Z
         convertQtoZ(data[0], tmpc[5]);
         /*sprintf(filename2, "./roots/roots_Z%04lu.txt", counter);
         optimal_pade(filename2, tmpc[5]);*/
         sprintf(filename1, "./data/surf_%04lu.txt", counter);
         surface_out(filename1, tmpc[5]);
-        
         find_peak(tmpc[5]);
-	
-	
 	// write out potential and its cut
         restore_potential(data[0], data[1], tmpc[5]);  
         get_momentum(data[0], data[1]);
